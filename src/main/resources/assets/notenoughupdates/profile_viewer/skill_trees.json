@@ -1,0 +1,631 @@
+{
+ "_source": "meowdding-repo (851c447) repo/mining/hotmperks and repo/foraging/hotfperks, MIT (c) 2026 meowdding. Portions of this code are from the SkyBlockPv mod.",
+ "mining": [
+  {
+   "id": "anomalous_desire",
+   "type": "ABILITY",
+   "name": "Tunnel Vision",
+   "x": 0,
+   "y": 5
+  },
+  {
+   "id": "blockhead",
+   "type": "PERK",
+   "name": "Blockhead",
+   "x": 1,
+   "y": 5,
+   "max": 20
+  },
+  {
+   "id": "core_of_the_mountain",
+   "type": "CORE",
+   "name": "Core of the Mountain",
+   "x": 3,
+   "y": 4,
+   "max": 10
+  },
+  {
+   "id": "crystalline",
+   "type": "PERK",
+   "name": "Crystalline",
+   "x": 1,
+   "y": 9,
+   "max": 50
+  },
+  {
+   "id": "daily_grind",
+   "type": "UNLEVELABLE",
+   "name": "Daily Grind",
+   "x": 1,
+   "y": 4
+  },
+  {
+   "id": "daily_powder",
+   "type": "UNLEVELABLE",
+   "name": "Daily Powder",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "id": "dead_mans_chest",
+   "type": "PERK",
+   "name": "Dead Man's Chest",
+   "x": 4,
+   "y": 9,
+   "max": 50
+  },
+  {
+   "id": "eager_adventurer",
+   "type": "PERK",
+   "name": "Eager Adventurer",
+   "x": 5,
+   "y": 8,
+   "max": 100
+  },
+  {
+   "id": "efficient_miner",
+   "type": "PERK",
+   "name": "Efficient Miner",
+   "x": 3,
+   "y": 2,
+   "max": 100
+  },
+  {
+   "id": "fortunate_mineman",
+   "type": "PERK",
+   "name": "Fortunate Mineman",
+   "x": 5,
+   "y": 6,
+   "max": 50
+  },
+  {
+   "id": "gem_lover",
+   "type": "PERK",
+   "name": "Gem Lover",
+   "x": 4,
+   "y": 3,
+   "max": 20
+  },
+  {
+   "id": "gemstone_infusion",
+   "type": "ABILITY",
+   "name": "Gemstone Infusion",
+   "x": 0,
+   "y": 9
+  },
+  {
+   "id": "gifts_from_the_departed",
+   "type": "PERK",
+   "name": "Gifts from the Departed",
+   "x": 2,
+   "y": 9,
+   "max": 100
+  },
+  {
+   "id": "great_explorer",
+   "type": "PERK",
+   "name": "Great Explorer",
+   "x": 5,
+   "y": 5,
+   "max": 20
+  },
+  {
+   "id": "keep_it_cool",
+   "type": "PERK",
+   "name": "Keep It Cool",
+   "x": 3,
+   "y": 5,
+   "max": 50
+  },
+  {
+   "id": "lonesome_miner",
+   "type": "PERK",
+   "name": "Lonesome Miner",
+   "x": 4,
+   "y": 5,
+   "max": 45
+  },
+  {
+   "id": "luck_of_the_cave",
+   "type": "PERK",
+   "name": "Luck of the Cave",
+   "x": 1,
+   "y": 2,
+   "max": 45
+  },
+  {
+   "id": "maniac_miner",
+   "type": "ABILITY",
+   "name": "Maniac Miner",
+   "x": 6,
+   "y": 5
+  },
+  {
+   "id": "metal_head",
+   "type": "PERK",
+   "name": "Metal Head",
+   "x": 1,
+   "y": 8,
+   "max": 20
+  },
+  {
+   "id": "miners_blessing",
+   "type": "UNLEVELABLE",
+   "name": "Miner's Blessing",
+   "x": 0,
+   "y": 7
+  },
+  {
+   "id": "mineshaft_mayhem",
+   "type": "UNLEVELABLE",
+   "name": "Mineshaft Mayhem",
+   "x": 6,
+   "y": 7
+  },
+  {
+   "id": "mining_fortune",
+   "type": "PERK",
+   "name": "Mining Fortune",
+   "x": 3,
+   "y": 1,
+   "max": 50
+  },
+  {
+   "id": "mining_master",
+   "type": "PERK",
+   "name": "Mining Master",
+   "x": 3,
+   "y": 9,
+   "max": 10
+  },
+  {
+   "id": "mining_speed",
+   "type": "PERK",
+   "name": "Mining Speed",
+   "x": 3,
+   "y": 0,
+   "max": 50
+  },
+  {
+   "id": "mining_speed_boost",
+   "type": "ABILITY",
+   "name": "Mining Speed Boost",
+   "x": 1,
+   "y": 1
+  },
+  {
+   "id": "mole",
+   "type": "PERK",
+   "name": "Mole",
+   "x": 3,
+   "y": 3,
+   "max": 200
+  },
+  {
+   "id": "no_stone_unturned",
+   "type": "PERK",
+   "name": "No Stone Unturned",
+   "x": 1,
+   "y": 7,
+   "max": 50
+  },
+  {
+   "id": "old_school",
+   "type": "PERK",
+   "name": "Old-School",
+   "x": 1,
+   "y": 3,
+   "max": 20
+  },
+  {
+   "id": "pickobulus",
+   "type": "ABILITY",
+   "name": "Pickobulus",
+   "x": 5,
+   "y": 1
+  },
+  {
+   "id": "powder_buff",
+   "type": "PERK",
+   "name": "Powder Buff",
+   "x": 3,
+   "y": 6,
+   "max": 50
+  },
+  {
+   "id": "precision_mining",
+   "type": "UNLEVELABLE",
+   "name": "Precision Mining",
+   "x": 2,
+   "y": 1
+  },
+  {
+   "id": "professional",
+   "type": "PERK",
+   "name": "Professional",
+   "x": 2,
+   "y": 3,
+   "max": 140
+  },
+  {
+   "id": "quick_forge",
+   "type": "PERK",
+   "name": "Quick Forge",
+   "x": 5,
+   "y": 2,
+   "max": 20
+  },
+  {
+   "id": "rags_to_riches",
+   "type": "PERK",
+   "name": "Rags to Riches",
+   "x": 3,
+   "y": 8,
+   "max": 50
+  },
+  {
+   "id": "seasoned_mineman",
+   "type": "PERK",
+   "name": "Seasoned Mineman",
+   "x": 5,
+   "y": 3,
+   "max": 100
+  },
+  {
+   "id": "sheer_force",
+   "type": "ABILITY",
+   "name": "Sheer Force",
+   "x": 6,
+   "y": 9
+  },
+  {
+   "id": "sky_mall",
+   "type": "UNLEVELABLE",
+   "name": "Sky Mall",
+   "x": 0,
+   "y": 3
+  },
+  {
+   "id": "speedy_mineman",
+   "type": "PERK",
+   "name": "Speedy Mineman",
+   "x": 1,
+   "y": 6,
+   "max": 50
+  },
+  {
+   "id": "steady_hand",
+   "type": "PERK",
+   "name": "Steady Hand",
+   "x": 3,
+   "y": 7,
+   "max": 100
+  },
+  {
+   "id": "strong_arm",
+   "type": "PERK",
+   "name": "Strong Arm",
+   "x": 2,
+   "y": 7,
+   "max": 100
+  },
+  {
+   "id": "subterranean_fisher",
+   "type": "PERK",
+   "name": "Subterranean Fisher",
+   "x": 2,
+   "y": 5,
+   "max": 40
+  },
+  {
+   "id": "surveyor",
+   "type": "PERK",
+   "name": "Surveyor",
+   "x": 5,
+   "y": 7,
+   "max": 20
+  },
+  {
+   "id": "titanium_insanium",
+   "type": "PERK",
+   "name": "Titanium Insanium",
+   "x": 4,
+   "y": 1,
+   "max": 50
+  },
+  {
+   "id": "vanguard_seeker",
+   "type": "PERK",
+   "name": "Vanguard Seeker",
+   "x": 5,
+   "y": 9,
+   "max": 50
+  },
+  {
+   "id": "warm_heart",
+   "type": "PERK",
+   "name": "Warm Heart",
+   "x": 4,
+   "y": 7,
+   "max": 50
+  }
+ ],
+ "foraging": [
+  {
+   "id": "250_gifts",
+   "type": "PERK",
+   "name": "250 Gifts",
+   "x": 3,
+   "y": 3,
+   "max": 40
+  },
+  {
+   "id": "axe_toss",
+   "type": "ABILITY",
+   "name": "Axe Toss",
+   "x": 5,
+   "y": 1
+  },
+  {
+   "id": "beekeeper",
+   "type": "UNLEVELABLE",
+   "name": "Beekeeper",
+   "x": 6,
+   "y": 7
+  },
+  {
+   "id": "center_of_the_forest",
+   "type": "CORE",
+   "name": "Center of the Forest",
+   "x": 3,
+   "y": 4,
+   "max": 5
+  },
+  {
+   "id": "collector",
+   "type": "PERK",
+   "name": "Collector",
+   "x": 4,
+   "y": 1,
+   "max": 50
+  },
+  {
+   "id": "daily_wishes",
+   "type": "PERK",
+   "name": "Daily Wishes",
+   "x": 4,
+   "y": 3,
+   "max": 100
+  },
+  {
+   "id": "damage_boost",
+   "type": "ABILITY",
+   "name": "Damage Boost",
+   "x": 1,
+   "y": 1
+  },
+  {
+   "id": "deep_waters",
+   "type": "PERK",
+   "name": "Deep Waters",
+   "x": 1,
+   "y": 2,
+   "max": 50
+  },
+  {
+   "id": "early_bird",
+   "type": "UNLEVELABLE",
+   "name": "Early Bird",
+   "x": 5,
+   "y": 3
+  },
+  {
+   "id": "efficient_forager",
+   "type": "PERK",
+   "name": "Efficient Forager",
+   "x": 5,
+   "y": 5,
+   "max": 100
+  },
+  {
+   "id": "essence_fortune",
+   "type": "PERK",
+   "name": "Essence Fortune",
+   "x": 2,
+   "y": 7,
+   "max": 50
+  },
+  {
+   "id": "foraging_fortune",
+   "type": "PERK",
+   "name": "Foraging Fortune",
+   "x": 3,
+   "y": 1,
+   "max": 50
+  },
+  {
+   "id": "foraging_madness",
+   "type": "UNLEVELABLE",
+   "name": "Foraging Madness",
+   "x": 1,
+   "y": 3
+  },
+  {
+   "id": "forest_fisher",
+   "type": "PERK",
+   "name": "Forest Fisher",
+   "x": 1,
+   "y": 5,
+   "max": 40
+  },
+  {
+   "id": "forest_speed",
+   "type": "PERK",
+   "name": "Forest Speed",
+   "x": 1,
+   "y": 7,
+   "max": 50
+  },
+  {
+   "id": "forest_strength",
+   "type": "PERK",
+   "name": "Forest Strength",
+   "x": 5,
+   "y": 7,
+   "max": 50
+  },
+  {
+   "id": "free_trial",
+   "type": "UNLEVELABLE",
+   "name": "Free Trial",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "id": "galateas_might",
+   "type": "PERK",
+   "name": "Galatea's Might",
+   "x": 5,
+   "y": 2,
+   "max": 50
+  },
+  {
+   "id": "half_empty",
+   "type": "PERK",
+   "name": "Half Empty",
+   "x": 1,
+   "y": 6,
+   "max": 25
+  },
+  {
+   "id": "half_full",
+   "type": "PERK",
+   "name": "Half Full",
+   "x": 5,
+   "y": 6,
+   "max": 25
+  },
+  {
+   "id": "homing_axe",
+   "type": "UNLEVELABLE",
+   "name": "Homing Axe",
+   "x": 0,
+   "y": 5
+  },
+  {
+   "id": "hunters_luck",
+   "type": "PERK",
+   "name": "Hunter's Luck",
+   "x": 3,
+   "y": 2,
+   "max": 50
+  },
+  {
+   "id": "iron_lungs",
+   "type": "PERK",
+   "name": "Iron Lung",
+   "x": 2,
+   "y": 3,
+   "max": 50
+  },
+  {
+   "id": "lottery",
+   "type": "UNLEVELABLE",
+   "name": "Lottery",
+   "x": 0,
+   "y": 3
+  },
+  {
+   "id": "luck_of_the_forest",
+   "type": "PERK",
+   "name": "Luck of the Forest",
+   "x": 2,
+   "y": 1,
+   "max": 40
+  },
+  {
+   "id": "maniac_slicer",
+   "type": "ABILITY",
+   "name": "Maniac Slicer",
+   "x": 6,
+   "y": 5
+  },
+  {
+   "id": "monster_hunter",
+   "type": "UNLEVELABLE",
+   "name": "Monster Hunter",
+   "x": 0,
+   "y": 7
+  },
+  {
+   "id": "precision_cutting",
+   "type": "UNLEVELABLE",
+   "name": "Precision Cutting",
+   "x": 6,
+   "y": 3
+  },
+  {
+   "id": "ricochet",
+   "type": "PERK",
+   "name": "Ricochet",
+   "x": 3,
+   "y": 6,
+   "max": 10
+  },
+  {
+   "id": "speed_boost",
+   "type": "PERK",
+   "name": "Speed Boost",
+   "x": 4,
+   "y": 5,
+   "max": 50
+  },
+  {
+   "id": "starlyn_supreme",
+   "type": "PERK",
+   "name": "Starlyn Supreme",
+   "x": 3,
+   "y": 5,
+   "max": 100
+  },
+  {
+   "id": "strength_boost",
+   "type": "PERK",
+   "name": "Strength Boost",
+   "x": 2,
+   "y": 5,
+   "max": 50
+  },
+  {
+   "id": "sweep",
+   "type": "PERK",
+   "name": "Sweep",
+   "x": 3,
+   "y": 0,
+   "max": 50
+  },
+  {
+   "id": "timber",
+   "type": "PERK",
+   "name": "Timber",
+   "x": 3,
+   "y": 7,
+   "max": 10
+  },
+  {
+   "id": "tree_whisperer",
+   "type": "UNLEVELABLE",
+   "name": "Tree Whisperer",
+   "x": 1,
+   "y": 4
+  },
+  {
+   "id": "two_for_one",
+   "type": "PERK",
+   "name": "Two-for-one",
+   "x": 4,
+   "y": 7,
+   "max": 100
+  }
+ ]
+}

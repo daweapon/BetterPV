@@ -46,6 +46,7 @@ import net.minecraft.util.datafix.fixes.ItemStackTheFlatteningFix;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.ResolvableProfile;
 
@@ -302,6 +303,11 @@ public class NEUManager {
 				// for glint-only items).
 				if (tag.contains("ench")) {
 					stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+				}
+				// Dyed leather armor keeps its colour in 1.8's display.color.
+				int dyeColour = tag.getCompoundOrEmpty("display").getIntOr("color", -1);
+				if (dyeColour >= 0) {
+					stack.set(DataComponents.DYED_COLOR, new DyedItemColor(dyeColour));
 				}
 			} catch (CommandSyntaxException ignored) {
 			}

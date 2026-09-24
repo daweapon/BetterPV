@@ -1320,21 +1320,24 @@ public class ProfileViewer {
 			}
 
 			// The wardrobe moved to loadout.armor / loadout.equipment: numbered sets, each slot its own NBT blob.
-			// Kept in set order with a null for each empty slot, four per set.
-			inventoryInfo.add("loadout_armor", getLoadoutItems(
-				Utils.getElement(profileInfo, "loadout.armor"), "HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"));
-			inventoryInfo.add("loadout_equipment", getLoadoutItems(
-				Utils.getElement(profileInfo, "loadout.equipment"),
-				"EQUIPMENT_SLOT_1", "EQUIPMENT_SLOT_2", "EQUIPMENT_SLOT_3", "EQUIPMENT_SLOT_4"));
+			// Kept in set order with a null for each empty slot, four per set; loadout_<kind>_ids holds each set's id
+			// in the same order (saved loadouts refer to sets by id).
+			addLoadoutSets(inventoryInfo, "armor", Utils.getElement(profileInfo, "loadout.armor"),
+				"HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS");
+			addLoadoutSets(inventoryInfo, "equipment", Utils.getElement(profileInfo, "loadout.equipment"),
+				"EQUIPMENT_SLOT_1", "EQUIPMENT_SLOT_2", "EQUIPMENT_SLOT_3", "EQUIPMENT_SLOT_4");
 
 			inventoryCacheMap.put(profileName, inventoryInfo);
 
 			return inventoryInfo;
 		}
 
-		private JsonArray getLoadoutItems(JsonElement sets, String... slots) {
+		private void addLoadoutSets(JsonObject inventoryInfo, String kind, JsonElement sets, String... slots) {
 			JsonArray contents = new JsonArray();
-			if (!(sets instanceof JsonObject setsObject)) return contents;
+			JsonArray ids = new JsonArray();
+			inventoryInfo.add("loadout_" + kind, contents);
+			inventoryInfo.add("loadout_" + kind + "_ids", ids);
+			if (!(sets instanceof JsonObject setsObject)) return;
 			TreeMap<Integer, JsonObject> ordered = new TreeMap<>();
 			for (Map.Entry<String, JsonElement> entry : setsObject.entrySet()) {
 				if (!(entry.getValue() instanceof JsonObject set)) continue;
@@ -1344,7 +1347,9 @@ public class ProfileViewer {
 					// equipped_set
 				}
 			}
-			for (JsonObject set : ordered.values()) {
+			for (Map.Entry<Integer, JsonObject> entry : ordered.entrySet()) {
+				JsonObject set = entry.getValue();
+				ids.add((int) Utils.getElementAsFloat(set.get("id"), entry.getKey()));
 				for (String slot : slots) {
 					JsonObject item = null;
 					String data = Utils.getElementAsString(Utils.getElement(set, slot + ".data"), "");
@@ -1361,7 +1366,6 @@ public class ProfileViewer {
 					contents.add(item == null ? JsonNull.INSTANCE : item);
 				}
 			}
-			return contents;
 		}
 
 		public JsonObject getBackpackData(JsonObject backpackContentsJson, JsonObject backpackIcons) {
