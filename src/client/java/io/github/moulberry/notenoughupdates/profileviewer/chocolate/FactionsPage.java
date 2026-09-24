@@ -36,13 +36,14 @@ import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /**
  * "Factions" sub-page of the chocolate factory tab, as SkyBlockPv's {@code FactionCfScreen}: the rabbits of each of
- * the four factions by rarity, lime when found and gray when not. The player's faction is shown in green with its
+ * the four factions by rarity, the rarity's rabbit head when found and gray dye when not. The player's faction is shown in green with its
  * level.
  */
 public class FactionsPage implements GuiProfileViewerPage {
@@ -52,11 +53,15 @@ public class FactionsPage implements GuiProfileViewerPage {
 	private static final int WIDTH = 5 * 18;
 
 	private final GuiProfileViewer instance;
-	private final ItemStack found = new ItemStack(Items.LIME_DYE);
+	private final Map<Integer, ItemStack> heads = new HashMap<>();
 	private final ItemStack missing = new ItemStack(Items.GRAY_DYE);
 
 	public FactionsPage(GuiProfileViewer instance) {
 		this.instance = instance;
+	}
+
+	private static ItemStack head(int rarity) {
+		return ChocolateInfoPage.texture(rarity < 0 ? "COMMON" : PvData.RARITIES.get(rarity));
 	}
 
 	@Override
@@ -98,7 +103,7 @@ public class FactionsPage implements GuiProfileViewerPage {
 						String name = names.get(i);
 						JsonElement count = rabbits.get(name.toLowerCase(Locale.ROOT));
 						boolean isFound = count != null && count.isJsonPrimitive() && count.getAsJsonPrimitive().isNumber();
-						if (PvUi.tintedSlot(graphics, isFound ? found : missing, PvData.rarityColour(rarityIndex),
+						if (PvUi.tintedSlot(graphics, isFound ? heads.computeIfAbsent(rarityIndex, FactionsPage::head) : missing, PvData.rarityColour(rarityIndex),
 							rowX + i * 18, rowY, mouseX, mouseY)) {
 							List<String> tooltip = new ArrayList<>();
 							tooltip.add(PvData.rarityCode(rarityIndex) + PvData.titleCase(name));

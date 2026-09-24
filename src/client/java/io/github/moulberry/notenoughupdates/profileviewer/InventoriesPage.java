@@ -378,7 +378,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 			RenderUtils.drawItemStack(graphics, FILLER_STACK, x, y);
 			return;
 		}
-		RenderUtils.drawItemStack(graphics, resolveIconCached(item), x, y);
+		RenderUtils.drawItemStackWithCount(graphics, resolveIconCached(item), x, y);
 	}
 
 	/**

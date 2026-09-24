@@ -48,6 +48,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.component.ResolvableProfile;
 
 import java.io.File;
@@ -57,6 +60,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -151,7 +155,7 @@ public class NEUManager {
 
 		int id = tag.getShortOr("id", (short) 0);
 		int damage = tag.getShortOr("Damage", (short) 0);
-		int count = tag.getShortOr("Count", (short) 0);
+		int count = tag.getShortOr("Count", (short) tag.getIntOr("count", 0));
 		// Hypixel now also sends modern components alongside the legacy NBT, notably the item model from its
 		// SkyBlock resource pack (many items, e.g. baits, are plain paper without it).
 		String itemModel = tag.getCompoundOrEmpty("components").getStringOr("minecraft:item_model", "");
@@ -307,6 +311,7 @@ public class NEUManager {
 				if (tag.contains("ench")) {
 					stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
 				}
+				applyPotionEffects(stack, tag);
 				// Dyed leather armor keeps its colour in 1.8's display.color.
 				int dyeColour = tag.getCompoundOrEmpty("display").getIntOr("color", -1);
 				if (dyeColour >= 0) {
@@ -331,6 +336,34 @@ public class NEUManager {
 
 		if (useCache) itemStackCache.put(internalname, stack.copy());
 		return stack;
+	}
+
+	private static final String[] LEGACY_EFFECT_NAMES = {
+		null, "speed", "slowness", "haste", "mining_fatigue", "strength", "instant_health", "instant_damage",
+		"jump_boost", "nausea", "regeneration", "resistance", "fire_resistance", "water_breathing", "invisibility",
+		"blindness", "night_vision", "hunger", "weakness", "poison", "wither", "health_boost", "absorption",
+		"saturation", "glowing", "levitation", "luck", "unluck"
+	};
+
+	/**
+	 * 1.8 potions took their colour from {@code CustomPotionEffects} (numeric effect ids); modern potions colour from
+	 * the {@code potion_contents} component, so rebuild that from the legacy list.
+	 */
+	private static void applyPotionEffects(ItemStack stack, CompoundTag tag) {
+		var legacy = tag.getListOrEmpty("CustomPotionEffects");
+		if (legacy.isEmpty()) return;
+		List<MobEffectInstance> effects = new ArrayList<>();
+		for (int i = 0; i < legacy.size(); i++) {
+			CompoundTag entry = legacy.getCompoundOrEmpty(i);
+			int id = entry.getIntOr("Id", 0);
+			if (id <= 0 || id >= LEGACY_EFFECT_NAMES.length) continue;
+			var effect = BuiltInRegistries.MOB_EFFECT.get(Identifier.withDefaultNamespace(LEGACY_EFFECT_NAMES[id]));
+			if (effect.isEmpty()) continue;
+			effects.add(new MobEffectInstance(effect.get(), Math.max(1, entry.getIntOr("Duration", 1)), entry.getIntOr("Amplifier", 0)));
+		}
+		if (!effects.isEmpty()) {
+			stack.set(DataComponents.POTION_CONTENTS, new PotionContents(java.util.Optional.empty(), java.util.Optional.empty(), effects, java.util.Optional.empty()));
+		}
 	}
 
 	private ItemStack resolveBaseItemStack(JsonObject json) {
@@ -358,7 +391,27 @@ public class NEUManager {
 				item = itemById(BlockStateData.upgradeBlock((legacyId << 4) | (damage & 15)));
 			}
 		}
+		if (item == null) item = itemFromVanillaModel(json);
 		return new ItemStack(item != null ? item : Items.BARRIER);
+	}
+
+	/** Last resort for legacy ids that don't resolve: a vanilla {@code minecraft:<item>} model names the item. */
+	private static Item itemFromVanillaModel(JsonObject json) {
+		String model = json.has("item_model") ? json.get("item_model").getAsString() : null;
+		if (model == null && json.has("nbttag")) {
+			try {
+				model = io.github.moulberry.notenoughupdates.util.Utils.parseLegacyNbt(json.get("nbttag").getAsString())
+					.getStringOr("ItemModel", null);
+			} catch (CommandSyntaxException ignored) {
+			}
+		}
+		if (model != null && model.startsWith("minecraft:")) {
+			Item fromModel = itemById(model);
+			if (fromModel != null) return fromModel;
+		}
+		// Plain vanilla items are named after their registry id (SLIME_BLOCK -> minecraft:slime_block).
+		String internalname = json.has("internalname") ? json.get("internalname").getAsString() : "";
+		return internalname.matches("[A-Z0-9_]+") ? itemById("minecraft:" + internalname.toLowerCase(Locale.ROOT)) : null;
 	}
 
 	private static Item itemById(String itemid) {

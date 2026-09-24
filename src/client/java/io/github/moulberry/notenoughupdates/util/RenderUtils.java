@@ -81,6 +81,13 @@ public class RenderUtils {
 	 * the call. The new pose stack (accessible via {@code graphics.pose()}) plays the same role, so this is just
 	 * an alias kept for call-site parity with the ported page classes.
 	 */
+	/** Like {@link #drawItemStack} but also draws the stack count (and durability bar) over the icon. */
+	public static void drawItemStackWithCount(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y) {
+		if (stack == null || stack.isEmpty()) return;
+		graphics.item(stack, x, y);
+		graphics.itemDecorations(Minecraft.getInstance().font, stack, x, y);
+	}
+
 	public static void drawItemStackLinear(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y) {
 		drawItemStack(graphics, stack, x, y);
 	}

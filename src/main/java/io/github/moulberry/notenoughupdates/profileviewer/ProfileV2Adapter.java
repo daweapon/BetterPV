@@ -11,9 +11,9 @@ import java.util.Map;
  * (e.g. {@code player_data.experience.SKILL_COMBAT} -> {@code experience_skill_combat}), so the pages keep working
  * unchanged. v1 keys are only added, never overwritten, and the v2 keys are left in place.
  *
- * <p>Not mapped: the wardrobe. Hypixel replaced {@code wardrobe_contents} (one packed inventory) with
- * {@code loadout.armor}, which stores each armour piece separately; rebuilding the packed form would mean
- * re-encoding NBT, so the wardrobe stays empty for now.
+ * <p>Not mapped here: the wardrobe. Hypixel replaced {@code wardrobe_contents} (one packed inventory) with
+ * {@code loadout.armor}, which stores each armour piece separately; {@code ProfileViewer} decodes those and rebuilds
+ * the packed layout.
  */
 public final class ProfileV2Adapter {
 	private ProfileV2Adapter() {}

@@ -1544,6 +1544,28 @@ public class ProfileViewer {
 			addLoadoutSets(inventoryInfo, "equipment", Utils.getElement(profileInfo, "loadout.equipment"),
 				"EQUIPMENT_SLOT_1", "EQUIPMENT_SLOT_2", "EQUIPMENT_SLOT_3", "EQUIPMENT_SLOT_4");
 
+			// Rebuild the old packed wardrobe layout the Storage tab reads: 36 slots per page, a row per armour slot
+			// and a column per set (9 sets a page).
+			if (inventoryInfo.getAsJsonArray("wardrobe_contents").isEmpty()) {
+				JsonArray armor = inventoryInfo.getAsJsonArray("loadout_armor");
+				JsonArray armorIds = inventoryInfo.getAsJsonArray("loadout_armor_ids");
+				JsonArray wardrobe = new JsonArray();
+				for (int set = 0; set < armorIds.size(); set++) {
+					int slot = armorIds.get(set).getAsInt() - 1;
+					if (slot < 0) continue;
+					int page = slot / 9;
+					int column = slot % 9;
+					for (int row = 0; row < 4; row++) {
+						JsonElement piece = armor.get(set * 4 + row);
+						if (piece.isJsonNull()) continue;
+						int index = page * 36 + row * 9 + column;
+						while (wardrobe.size() <= index) wardrobe.add(JsonNull.INSTANCE);
+						wardrobe.set(index, piece);
+					}
+				}
+				inventoryInfo.add("wardrobe_contents", wardrobe);
+			}
+
 			inventoryCacheMap.put(profileName, inventoryInfo);
 
 			return inventoryInfo;
