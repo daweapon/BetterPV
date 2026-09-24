@@ -47,7 +47,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -678,6 +680,9 @@ public class ProfileViewer {
 		private final AtomicBoolean updatingGuildInfoState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingPlayerStatusState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingBingoInfo = new AtomicBoolean(false);
+		/** Museum member data by profile name; an empty object once it's known there is none (see getMuseumInfo). */
+		private final Map<String, JsonObject> museumInfoMap = new ConcurrentHashMap<>();
+		private final Set<String> museumRequested = ConcurrentHashMap.newKeySet();
 		private final Pattern COLL_TIER_PATTERN = Pattern.compile("_(-?\\d+)");
 		private String latestProfile = null;
 		private JsonArray skyblockProfiles = null;
@@ -744,6 +749,64 @@ public class ProfileViewer {
 					return null;
 				}));
 			return bingoInformation != null ? bingoInformation : null;
+		}
+
+		/**
+		 * This player's museum ({@code members.<uuid>} of {@code v2/skyblock/museum}) for a profile: its donated
+		 * {@code items} (by museum id) and {@code special} items, still NBT-encoded. Null while loading; an empty
+		 * object if the player has no museum data (e.g. the museum API setting is off), or just {@code __error} if
+		 * the request failed.
+		 * Requested once per profile.
+		 */
+		public JsonObject getMuseumInfo(String profileName) {
+			if (profileName == null) profileName = latestProfile;
+			if (profileName == null) return null;
+			JsonObject cached = museumInfoMap.get(profileName);
+			if (cached != null) return cached;
+			String profileId = getProfileIdFor(profileName);
+			if (profileId == null || !museumRequested.add(profileName)) return null;
+
+			String name = profileName;
+			manager.apiUtils
+				.newHypixelApiRequest("v2/skyblock/museum")
+				.queryArgument("profile", profileId)
+				.requestJson()
+				.handle((jsonObject, ex) -> {
+					boolean success = jsonObject != null && jsonObject.has("success") && jsonObject.get("success").getAsBoolean();
+					JsonElement member = success ? Utils.getElement(jsonObject, "members." + uuid) : null;
+					JsonObject info = member instanceof JsonObject object ? object : new JsonObject();
+					if (!success) info.addProperty("__error", true);
+					museumInfoMap.put(name, info);
+					return null;
+				});
+			return null;
+		}
+
+		/** The Hypixel profile id ({@code profile_id}) of the profile with this name, or null if unknown. */
+		private String getProfileIdFor(String profileName) {
+			if (skyblockProfiles == null) return null;
+			for (JsonElement element : skyblockProfiles) {
+				if (element instanceof JsonObject profile && profile.has("cute_name") && profile.has("profile_id")
+					&& profile.get("cute_name").getAsString().equalsIgnoreCase(profileName)) {
+					return profile.get("profile_id").getAsString();
+				}
+			}
+			return null;
+		}
+
+		/** Decodes one NBT-encoded item list ({@code {"type":0,"data":"<base64>"}}) into item JSON; null for empty slots. */
+		public List<JsonObject> decodeItems(JsonElement encoded) {
+			List<JsonObject> items = new ArrayList<>();
+			String data = Utils.getElementAsString(Utils.getElement(encoded, "data"), null);
+			if (data == null) return items;
+			try {
+				CompoundTag nbt = NbtIo.readCompressed(new ByteArrayInputStream(Base64.getDecoder().decode(data)), NbtAccounter.unlimitedHeap());
+				ListTag list = nbt.getListOrEmpty("i");
+				for (int i = 0; i < list.size(); i++) items.add(manager.getJsonFromNBTEntry(list.getCompoundOrEmpty(i)));
+			} catch (IOException | IllegalArgumentException e) {
+				// Unreadable: no items.
+			}
+			return items;
 		}
 
 		public long getNetWorth(String profileName) {

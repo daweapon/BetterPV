@@ -36,6 +36,7 @@ const ALLOWED_ENDPOINTS = {
 	"skyblock/bingo": ["uuid", 300],
 	"v2/skyblock/bingo": ["uuid", 300],
 	"v2/skyblock/profiles": ["uuid", 180],
+	"v2/skyblock/museum": ["profile", 180],
 };
 
 const UUID_PATTERN = /^[0-9a-f]{32}$/;
@@ -187,7 +188,11 @@ async function handleHypixel(request, url, env) {
 	}
 
 	// Normalised upstream URL - also the cache key, so it never includes the caller's token.
-	const upstreamUrl = "https://api.hypixel.net/" + endpoint + "?" + argName + "=" + argValue;
+	// Profile ids go upstream in their usual dashed form.
+	const upstreamArg = argName === "profile"
+		? argValue.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5")
+		: argValue;
+	const upstreamUrl = "https://api.hypixel.net/" + endpoint + "?" + argName + "=" + upstreamArg;
 	const now = Date.now();
 	const cached = responseCache.get(upstreamUrl);
 	if (cached && cached.expires > now) {

@@ -24,7 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
- * Empty page for tabs that don't have content yet (Farming, Museum, Chocolate Factory, Rift).
+ * Empty page for tabs that don't have content yet (Farming, Chocolate Factory, Rift).
  * Each gets replaced by its own page class once it's built.
  */
 public class PlaceholderPage implements GuiProfileViewerPage {

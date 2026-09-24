@@ -147,7 +147,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		pages.put(ProfileViewerPage.FARMING, new PlaceholderPage(this, "Farming"));
 		pages.put(ProfileViewerPage.FORAGING, new ForagingPage(this));
 		pages.put(ProfileViewerPage.LOADOUTS, new LoadoutsPage(this));
-		pages.put(ProfileViewerPage.MUSEUM, new PlaceholderPage(this, "Museum"));
+		pages.put(ProfileViewerPage.MUSEUM, new MuseumPage(this));
 		pages.put(ProfileViewerPage.CHOCOLATE_FACTORY, new PlaceholderPage(this, "Chocolate Factory"));
 		pages.put(ProfileViewerPage.RIFT, new PlaceholderPage(this, "Rift"));
 	}
