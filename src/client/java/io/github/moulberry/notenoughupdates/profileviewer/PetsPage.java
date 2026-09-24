@@ -254,9 +254,7 @@ public class PetsPage implements GuiProfileViewerPage {
 				if (mouseX > guiLeft + x && mouseX < guiLeft + x + 20) {
 					if (mouseY > guiTop + y && mouseY < guiTop + y + 20) {
 						float level = pet.get("level").getAsFloat();
-						instance.tooltipToDisplay = Utils.createList(
-							rarity.chatFormatting + formatPetName(petType) + ChatFormatting.GRAY + " (Lvl " + (int) Math.floor(level) + ")"
-						);
+						instance.tooltipToDisplay = petTooltip(pet, (int) Math.floor(level));
 					}
 				}
 			}
@@ -345,6 +343,102 @@ public class PetsPage implements GuiProfileViewerPage {
 				98
 			);
 		}
+	}
+
+	/** Builds the old NEU-style pet hover: scaled stats/perks plus the held item's name and effect lore. */
+	private static List<String> petTooltip(JsonObject pet, int level) {
+		String type = pet.get("type").getAsString();
+		String tier = pet.get("tier").getAsString();
+		String rarityId = PlayerStats.MINION_RARITY_TO_NUM.get(tier);
+		JsonObject repoPet = rarityId == null ? null : io.github.moulberry.notenoughupdates.NotEnoughUpdates.INSTANCE.manager
+			.getItemInformation().get(type + ";" + rarityId);
+		if (repoPet == null) return Utils.createList(formatPetName(type) + " (Lvl " + level + ")");
+
+		Map<String, String> replacements = petReplacements(type, tier, level);
+		String heldId = Utils.getElementAsString(pet.get("heldItem"), null);
+		if (heldId != null) {
+			applyPetBoost(replacements, PlayerStats.PET_STAT_BOOSTS.get(heldId), false);
+			applyPetBoost(replacements, PlayerStats.PET_STAT_BOOSTS_MULT.get(heldId), true);
+		}
+
+		List<String> tooltip = new ArrayList<>();
+		tooltip.add(replace(repoPet.get("displayname").getAsString(), replacements));
+		for (JsonElement line : repoPet.getAsJsonArray("lore")) {
+			String text = replace(line.getAsString(), replacements);
+			String clean = ChatFormatting.stripFormatting(text);
+			if (clean != null && (clean.contains("Right-click to add this pet") || clean.contains("Click to view recipe"))) continue;
+			tooltip.add(text);
+		}
+
+		if (heldId != null) {
+			JsonObject held = io.github.moulberry.notenoughupdates.NotEnoughUpdates.INSTANCE.manager
+				.getItemInformation().get(heldId);
+			if (held != null) {
+				tooltip.add("");
+				tooltip.add(ChatFormatting.GOLD + "Held Item: " + held.get("displayname").getAsString());
+				boolean description = false;
+				int blanks = 0;
+				for (JsonElement line : held.getAsJsonArray("lore")) {
+					String text = line.getAsString();
+					if (ChatFormatting.stripFormatting(text).trim().isEmpty()) {
+						blanks++;
+						if (description) break;
+					} else if (blanks >= 2) {
+						description = true;
+						tooltip.add(text);
+					}
+				}
+			}
+		}
+		tooltip.add("");
+		tooltip.add(ChatFormatting.AQUA + "MAX LEVEL");
+		tooltip.add(ChatFormatting.GRAY + StringUtils.shortNumberFormat(pet.get("exp").getAsFloat()) + " XP");
+		return tooltip;
+	}
+
+	private static Map<String, String> petReplacements(String type, String tier, int level) {
+		Map<String, String> replacements = new java.util.HashMap<>();
+		replacements.put("LVL", Integer.toString(level));
+		JsonElement petData = Utils.getElement(Constants.PETNUMS, type + "." + tier);
+		if (!(petData instanceof JsonObject data) || !data.has("1") || !data.has("100")) return replacements;
+		JsonObject min = data.getAsJsonObject("1");
+		JsonObject max = data.getAsJsonObject("100");
+		float minMix = (100 - level) / 99f;
+		float maxMix = (level - 1) / 99f;
+		JsonArray otherMin = min.getAsJsonArray("otherNums");
+		JsonArray otherMax = max.getAsJsonArray("otherNums");
+		for (int i = 0; i < otherMax.size(); i++) {
+			double value = Math.floor((otherMin.get(i).getAsDouble() * minMix + otherMax.get(i).getAsDouble() * maxMix) * 10) / 10;
+			replacements.put(Integer.toString(i), compact(value));
+		}
+		for (Map.Entry<String, JsonElement> entry : max.getAsJsonObject("statNums").entrySet()) {
+			double value = Math.floor((min.getAsJsonObject("statNums").get(entry.getKey()).getAsDouble() * minMix
+				+ entry.getValue().getAsDouble() * maxMix) * 10) / 10;
+			replacements.put(entry.getKey(), compact(value));
+		}
+		return replacements;
+	}
+
+	private static void applyPetBoost(Map<String, String> replacements, Map<String, Float> boosts, boolean multiply) {
+		if (boosts == null) return;
+		for (Map.Entry<String, Float> boost : boosts.entrySet()) {
+			String key = boost.getKey().toUpperCase(Locale.ROOT);
+			String original = replacements.get(key);
+			if (original == null) continue;
+			double value = Double.parseDouble(original);
+			replacements.put(key, compact(Math.floor(multiply ? value * boost.getValue() : value + boost.getValue())));
+		}
+	}
+
+	private static String replace(String text, Map<String, String> replacements) {
+		for (Map.Entry<String, String> entry : replacements.entrySet()) {
+			text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+		return text;
+	}
+
+	private static String compact(double value) {
+		return value == Math.rint(value) ? Long.toString((long) value) : Double.toString(value);
 	}
 
 	/**

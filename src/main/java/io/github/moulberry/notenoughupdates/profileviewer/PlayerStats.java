@@ -182,6 +182,14 @@ public class PlayerStats {
 		new HashMap<String, HashMap<String, Float>>() {
 			{
 				put(
+					"ANTIQUE_REMEDIES",
+					new HashMap<String, Float>() {{ put("STRENGTH", 1.8f); }}
+				);
+				put(
+					"PET_ITEM_ANTIQUE_REMEDIES",
+					new HashMap<String, Float>() {{ put("STRENGTH", 1.8f); }}
+				);
+				put(
 					"PET_ITEM_IRON_CLAWS_COMMON",
 					new HashMap<String, Float>() {
 						{
@@ -820,6 +828,11 @@ public class PlayerStats {
 	 * @see io.github.moulberry.notenoughupdates.profileviewer.ProfileViewer.Profile#getInventoryInfo(String)
 	 */
 	public static int getMagicalPower(JsonObject inventoryInfo) {
+		return getMagicalPower(inventoryInfo, null);
+	}
+
+	/** Includes the modern profile-wide MP bonuses which are not represented by bag items. */
+	public static int getMagicalPower(JsonObject inventoryInfo, JsonObject profileInfo) {
 		if (inventoryInfo == null || !inventoryInfo.has("talisman_bag") || !inventoryInfo.get("talisman_bag").isJsonArray()) {
 			return -1;
 		}
@@ -888,6 +901,16 @@ public class PlayerStats {
 				case 5:
 					powderAmount += 22;
 					break;
+			}
+		}
+		if (profileInfo != null) {
+			if (Utils.getElementAsBoolean(Utils.getElement(profileInfo, "rift.access.consumed_prism"), false)) {
+				powderAmount += 11;
+			}
+			boolean hasAbicase = accessories.keySet().stream().anyMatch(id -> id.startsWith("ABICASE_"));
+			JsonElement contacts = Utils.getElement(profileInfo, "nether_island_player_data.abiphone.active_contacts");
+			if (hasAbicase && contacts != null && contacts.isJsonArray()) {
+				powderAmount += contacts.getAsJsonArray().size() / 2;
 			}
 		}
 		return powderAmount;

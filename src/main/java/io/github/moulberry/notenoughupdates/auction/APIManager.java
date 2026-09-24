@@ -44,6 +44,7 @@ public class APIManager {
 	private final NEUManager manager;
 
 	private JsonObject lowestBins = null;
+	private JsonObject coflLowestBins = null;
 	private JsonObject auctionPricesAvgLowestBinJson = null;
 	private JsonObject bazaarJson = null;
 	private JsonObject auctionPricesJson = null;
@@ -60,19 +61,64 @@ public class APIManager {
 		this.manager = manager;
 	}
 
+	/** True once both Bazaar and auction prices are available for a complete profile calculation. */
+	public boolean isPricingReady() {
+		return bazaarJson != null && (coflLowestBins != null || lowestBins != null || auctionPricesAvgLowestBinJson != null);
+	}
+
 	public long getLowestBin(String internalName) {
-		if (lowestBins != null && lowestBins.has(internalName)) {
-			JsonElement e = lowestBins.get(internalName);
-			if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isNumber()) {
+		if (coflLowestBins != null) {
+			JsonElement coflPrice = coflLowestBins.get(internalName);
+			if (coflPrice != null && coflPrice.isJsonPrimitive() && coflPrice.getAsJsonPrimitive().isNumber()) {
+				return coflPrice.getAsBigDecimal().longValue();
+			}
+		}
+		if (lowestBins != null) {
+			String priceKey = internalName;
+			int separator = internalName.lastIndexOf(';');
+			if (separator > 0) {
+				String[] rarities = {"COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"};
+				try {
+					int rarity = Integer.parseInt(internalName.substring(separator + 1));
+					if (rarity >= 0 && rarity < rarities.length) {
+						priceKey = "PET-" + internalName.substring(0, separator) + "-" + rarities[rarity];
+					}
+				} catch (NumberFormatException ignored) {
+				}
+			}
+			JsonElement e = lowestBins.get(priceKey);
+			if (e == null) e = lowestBins.get(internalName);
+			if (e != null && e.isJsonPrimitive() && e.getAsJsonPrimitive().isNumber()) {
 				return e.getAsBigDecimal().longValue();
 			}
 		}
 		return -1;
 	}
 
+	public long getPetLowestBin(String type, int rarity, int level) {
+		if (lowestBins == null) return -1;
+		String[] rarities = {"COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"};
+		if (rarity < 0 || rarity >= rarities.length) return -1;
+		String base = "PET-" + type + "-" + rarities[rarity];
+		JsonElement priced = null;
+		if (level >= 200) priced = lowestBins.get(base + "-200");
+		if (priced == null && level >= 100) priced = lowestBins.get(base + "-100");
+		if (priced == null) priced = lowestBins.get(base);
+		return priced != null && priced.isJsonPrimitive() && priced.getAsJsonPrimitive().isNumber()
+			? priced.getAsBigDecimal().longValue() : -1;
+	}
+
 	public void updateLowestBin() {
 		manager.apiUtils
-			.newMoulberryRequest("lowestbin.json.gz")
+			.request()
+			.url("https://sky.coflnet.com/api/prices/neu")
+			.requestJson()
+			.thenAccept(jsonObject -> {
+				if (jsonObject != null) coflLowestBins = jsonObject;
+			});
+		manager.apiUtils
+			.request()
+			.url("https://lb.tricked.dev/lowestbins.json.gz")
 			.gunzip()
 			.requestJson()
 			.thenAccept(jsonObject -> {
@@ -151,7 +197,7 @@ public class APIManager {
 
 	public void updateBazaar() {
 		manager.apiUtils
-			.newAnonymousHypixelApiRequest("skyblock/bazaar")
+			.newAnonymousHypixelApiRequest("v2/skyblock/bazaar")
 			.requestJson()
 			.thenAccept(jsonObject -> {
 				if (jsonObject == null || !jsonObject.has("success") || !jsonObject.get("success").getAsBoolean()) return;

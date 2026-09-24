@@ -305,7 +305,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 				RenderUtils.drawTexturedRect(graphics, pv_dropdown, guiLeft, guiTop + sizeY + 3, 100, 20, 0, 100 / 200f, 0, 20 / 185f);
 				RenderUtils.drawStringCenteredScaledMaxWidth(
 					graphics,
-					profileId == null ? "" : profileId,
+					(profileId == null ? "" : profileId) + (profileDropdownSelected ? " \u25b2" : " \u25bc"),
 					this.minecraft.font,
 					guiLeft + 50,
 					guiTop + sizeY + 3 + 10,
@@ -391,6 +391,10 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 
 		super.extractRenderState(graphics, mouseX, mouseY, partialTicks); // draws the player-name EditBox widget
 
+		if (profileDropdownSelected && profile != null) {
+			renderProfileDropdown(graphics, mouseX, mouseY);
+		}
+
 		if (tooltipToDisplay != null) {
 			List<String> grayTooltip = new ArrayList<>(tooltipToDisplay.size());
 			for (String line : tooltipToDisplay) {
@@ -398,6 +402,28 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			}
 			RenderUtils.drawHoveringText(graphics, grayTooltip, mouseX, mouseY);
 			tooltipToDisplay = null;
+		}
+	}
+
+	private void renderProfileDropdown(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		List<String> profileNames = profile.getProfileNames();
+		int menuBottom = guiTop + sizeY + 3;
+		for (int index = 0; index < profileNames.size(); index++) {
+			int y = menuBottom - (index + 1) * 20;
+			boolean hovered = Utils.isWithinRect(mouseX, mouseY, guiLeft, y, 100, 20);
+			boolean selected = profileNames.get(index).equals(profileId);
+			graphics.fill(guiLeft, y, guiLeft + 100, y + 20, hovered ? 0xE0334A46 : 0xE0151515);
+			RenderUtils.drawTexturedRect(graphics, pv_dropdown, guiLeft, y, 100, 20, 0, 100 / 200f, 0, 20 / 185f);
+			RenderUtils.drawStringCenteredScaledMaxWidth(
+				graphics,
+				profileNames.get(index),
+				this.minecraft.font,
+				guiLeft + 50,
+				y + 10,
+				true,
+				90,
+				selected ? 0xFFD700 : hovered ? 0x55FFFF : 0x3FE0D0
+			);
 		}
 	}
 
@@ -483,6 +509,29 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		int mouseX = (int) event.x();
 		int mouseY = (int) event.y();
+		List<String> profileNames = profile == null ? Collections.emptyList() : profile.getProfileNames();
+
+		if (profileDropdownSelected && event.button() == 0) {
+			int menuBottom = guiTop + sizeY + 3;
+			for (int index = 0; index < profileNames.size(); index++) {
+				int y = menuBottom - (index + 1) * 20;
+				if (Utils.isWithinRect(mouseX, mouseY, guiLeft, y, 100, 20)) {
+					String newProfileId = profileNames.get(index);
+					if (profileId == null || !profileId.equals(newProfileId)) {
+						resetCache();
+						profileId = newProfileId;
+						RenderUtils.playPressSound();
+					}
+					profileDropdownSelected = false;
+					return true;
+				}
+			}
+			if (Utils.isWithinRect(mouseX, mouseY, guiLeft, guiTop + sizeY + 3, 100, 20)) {
+				profileDropdownSelected = false;
+				return true;
+			}
+			profileDropdownSelected = false;
+		}
 
 		if (currentPage != ProfileViewerPage.LOADING && currentPage != ProfileViewerPage.INVALID_NAME) {
 			List<ProfileViewerPage> tabs = visibleTabs();
@@ -513,25 +562,11 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		}
 
 		if (
-			profile != null && !profile.getProfileNames().isEmpty() &&
+			profile != null && !profileNames.isEmpty() && event.button() == 0 &&
 				Utils.isWithinRect(mouseX, mouseY, guiLeft, guiTop + sizeY + 3, 100, 20)
 		) {
-			int profileNum = 0;
-			for (int index = 0; index < profile.getProfileNames().size(); index++) {
-				if (profile.getProfileNames().get(index).equals(profileId)) {
-					profileNum = index;
-					break;
-				}
-			}
-			profileNum += event.button() == 0 ? 1 : -1;
-			if (profileNum >= profile.getProfileNames().size()) profileNum = 0;
-			if (profileNum < 0) profileNum = profile.getProfileNames().size() - 1;
-
-			String newProfileId = profile.getProfileNames().get(profileNum);
-			if (profileId != null && !profileId.equals(newProfileId)) {
-				resetCache();
-			}
-			profileId = newProfileId;
+			profileDropdownSelected = true;
+			RenderUtils.playPressSound();
 			return true;
 		}
 

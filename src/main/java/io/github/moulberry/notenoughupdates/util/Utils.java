@@ -382,6 +382,24 @@ public class Utils {
 		return prim.getAsInt();
 	}
 
+	public static long getElementAsLong(JsonElement element, long def) {
+		if (element == null || !element.isJsonPrimitive()) return def;
+		JsonPrimitive prim = element.getAsJsonPrimitive();
+		return prim.isNumber() ? prim.getAsLong() : def;
+	}
+
+	public static double getElementAsDouble(JsonElement element, double def) {
+		if (element == null || !element.isJsonPrimitive()) return def;
+		JsonPrimitive prim = element.getAsJsonPrimitive();
+		return prim.isNumber() ? prim.getAsDouble() : def;
+	}
+
+	public static boolean getElementAsBoolean(JsonElement element, boolean def) {
+		if (element == null || !element.isJsonPrimitive()) return def;
+		JsonPrimitive prim = element.getAsJsonPrimitive();
+		return prim.isBoolean() ? prim.getAsBoolean() : def;
+	}
+
 	public static String getElementAsString(JsonElement element, String def) {
 		if (element == null) return def;
 		if (!element.isJsonPrimitive()) return def;

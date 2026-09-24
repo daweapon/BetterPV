@@ -192,7 +192,10 @@ public class InventoriesPage implements GuiProfileViewerPage {
 					List<String> tooltip = new ArrayList<>();
 					tooltip.add(entry.getValue().getHoverName().getString());
 					if ("talisman_bag".equals(entry.getKey())) {
-						int magicalPower = PlayerStats.getMagicalPower(inventoryInfo);
+						JsonObject profileInfo = profile.getProfileInformation(profileId);
+						int magicalPower = Utils.getElementAsInt(
+							Utils.getElement(profileInfo, "accessory_bag_storage.highest_magical_power"), -1);
+						if (magicalPower < 0) magicalPower = PlayerStats.getMagicalPower(inventoryInfo, profileInfo);
 						tooltip.add(
 							ChatFormatting.DARK_GRAY + "Magical Power: " +
 								(magicalPower == -1

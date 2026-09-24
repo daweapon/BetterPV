@@ -19,6 +19,8 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer;
 
+// Portions of this code are from the SkyBlockPv mod.
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -852,8 +854,11 @@ public class ProfileViewer {
 		public long getNetWorth(String profileName) {
 			if (profileName == null) profileName = latestProfile;
 			if (networth.get(profileName) != null) return networth.get(profileName);
+			if (!manager.auctionManager.isPricingReady()) return -1;
 			if (getProfileInformation(profileName) == null) return -1;
 			if (getInventoryInfo(profileName) == null) return -1;
+			JsonObject museumInfo = getMuseumInfo(profileName);
+			if (museumInfo == null) return -1;
 
 			JsonObject inventoryInfo = getInventoryInfo(profileName);
 			JsonObject profileInfo = getProfileInformation(profileName);
@@ -937,14 +942,11 @@ public class ProfileViewer {
 								auctionPrice * count + mostExpensiveInternal.getOrDefault(internalname, 0L)
 							);
 							networth += auctionPrice * count;
+							networth += upgradeValue(item) * count;
 						}
 					}
 				}
 			}
-			if (networth == 0) return -1;
-
-			networth = (int) (networth * 1.3f);
-
 			JsonObject petsInfo = getPetsInfo(profileName);
 			if (petsInfo != null && petsInfo.has("pets")) {
 				if (petsInfo.get("pets").isJsonArray()) {
@@ -957,25 +959,126 @@ public class ProfileViewer {
 							String tier = pet.get("tier").getAsString();
 							String tierNum = petRarityToNumMap.get(tier);
 							if (tierNum != null) {
-								String internalname2 = petname + ";" + tierNum;
-								JsonObject info2 = manager.auctionManager.getItemAuctionInfo(internalname2);
-								if (info2 == null || !info2.has("price") || !info2.has("count")) continue;
-								int auctionPrice2 = (int) (info2.get("price").getAsFloat() / info2.get("count").getAsFloat());
-
-								networth += auctionPrice2;
+								int level = (int) Math.floor(PlayerStats.getPetLevel(
+									petname, tier, Utils.getElementAsFloat(pet.get("exp"), 0)).level);
+								networth += Math.max(0, manager.auctionManager.getPetLowestBin(
+									petname, Integer.parseInt(tierNum), level));
 							}
+							String heldItem = Utils.getElementAsString(pet.get("heldItem"), null);
+							if (heldItem != null) networth += getPrice(heldItem);
+							String skin = Utils.getElementAsString(pet.get("skin"), null);
+							if (skin != null) networth += getPrice(skin.startsWith("PET_SKIN_") ? skin : "PET_SKIN_" + skin);
 						}
 					}
 				}
 			}
 
-			float bankBalance = Utils.getElementAsFloat(Utils.getElement(profileInfo, "banking.balance"), 0);
-			float purseBalance = Utils.getElementAsFloat(Utils.getElement(profileInfo, "coin_purse"), 0);
+			JsonElement sacksElement = Utils.getElement(profileInfo, "sacks_counts");
+			if (sacksElement instanceof JsonObject sacks) {
+				for (Map.Entry<String, JsonElement> entry : sacks.entrySet()) {
+					long amount = Utils.getElementAsLong(entry.getValue(), 0);
+					long price = getPrice(entry.getKey());
+					if (amount > 0 && price > 0) networth += price * amount;
+				}
+			}
+
+			// Match SkyBlockPV's museum category: donated and special items count, borrowed items do not.
+			if (!museumInfo.has("__error")) {
+				JsonElement donatedElement = museumInfo.get("items");
+				if (donatedElement instanceof JsonObject donated) {
+					for (JsonElement value : donated.asMap().values()) {
+						if (!(value instanceof JsonObject entry)
+							|| Utils.getElementAsBoolean(entry.get("borrowing"), false)) continue;
+						for (JsonObject item : decodeItems(entry.get("items"))) networth += itemValue(item);
+					}
+				}
+				JsonElement specialElement = museumInfo.get("special");
+				if (specialElement instanceof JsonArray special) {
+					for (JsonElement value : special) {
+						for (JsonObject item : decodeItems(value)) networth += itemValue(item);
+					}
+				}
+			}
+
+			long bankBalance = (long) Utils.getElementAsDouble(Utils.getElement(profileInfo, "banking.balance"), 0);
+			long purseBalance = (long) Utils.getElementAsDouble(Utils.getElement(profileInfo, "coin_purse"), 0);
 
 			networth += bankBalance + purseBalance;
+			if (networth == 0) return -1;
 
 			this.networth.put(profileName, networth);
 			return networth;
+		}
+
+		private long getPrice(String internalName) {
+			JsonObject bazaar = manager.auctionManager.getBazaarInfo(internalName);
+			if (bazaar != null && bazaar.has("curr_sell")) return (long) bazaar.get("curr_sell").getAsDouble();
+			long price = (long) manager.auctionManager.getItemAvgBin(internalName);
+			return price > 0 ? price : manager.auctionManager.getLowestBin(internalName);
+		}
+
+		private long itemValue(JsonObject item) {
+			if (item == null || !item.has("internalname")) return 0;
+			String internalName = item.get("internalname").getAsString();
+			if (manager.auctionManager.isVanillaItem(internalName)) return 0;
+			long price = getPrice(internalName);
+			int count = Utils.getElementAsInt(item.get("count"), 1);
+			return (price > 0 ? price : 0) * count + upgradeValue(item) * count;
+		}
+
+		/** Modern SkyBlock item value beyond the base ID, following SkyBlockAPI's calculator sources. */
+		private long upgradeValue(JsonObject item) {
+			if (!item.has("nbttag")) return 0;
+			try {
+				CompoundTag tag = Utils.parseLegacyNbt(item.get("nbttag").getAsString());
+				CompoundTag attributes = tag.getCompoundOrEmpty("ExtraAttributes");
+				long value = 0;
+				if (attributes.getInt("rarity_upgrades").orElse(0) > 0) value += positivePrice("RECOMBOBULATOR_3000");
+
+				CompoundTag enchants = attributes.getCompoundOrEmpty("enchantments");
+				for (String enchant : enchants.keySet()) {
+					int level = enchants.getInt(enchant).orElse(0);
+					if (level > 0) value += positivePrice("ENCHANTMENT_" + enchant.toUpperCase(Locale.ROOT) + "_" + level);
+				}
+
+				int potatoBooks = attributes.getInt("hot_potato_count").orElse(0);
+				value += positivePrice("HOT_POTATO_BOOK") * Math.min(10, potatoBooks);
+				value += positivePrice("FUMING_POTATO_BOOK") * Math.max(0, potatoBooks - 10);
+				if (attributes.getInt("art_of_war_count").orElse(0) > 0) value += positivePrice("THE_ART_OF_WAR");
+				if (attributes.getInt("art_of_peace").orElse(attributes.getInt("artOfPeaceApplied").orElse(0)) > 0) value += positivePrice("THE_ART_OF_PEACE");
+				if (attributes.getInt("book_of_stats").orElse(attributes.getInt("stats_book").orElse(0)) > 0) value += positivePrice("BOOK_OF_STATS");
+				if (attributes.getInt("jalapeno_count").orElse(0) > 0) value += positivePrice("JALAPENO_BOOK");
+
+				ListTag scrolls = attributes.getListOrEmpty("ability_scroll");
+				for (int i = 0; i < scrolls.size(); i++) value += positivePrice(scrolls.getStringOr(i, ""));
+				String[] masterStars = {"FIRST_MASTER_STAR", "SECOND_MASTER_STAR", "THIRD_MASTER_STAR", "FOURTH_MASTER_STAR", "FIFTH_MASTER_STAR"};
+				int stars = attributes.getInt("upgrade_level").orElse(attributes.getInt("dungeon_item_level").orElse(0));
+				for (int i = 0; i < Math.min(masterStars.length, Math.max(0, stars - 5)); i++) value += positivePrice(masterStars[i]);
+
+				for (String key : new String[]{"drill_part_fuel_tank", "drill_part_engine", "drill_part_upgrade_module",
+					"power_ability_scroll", "dye_item", "applied_dye", "skin"}) {
+					String id = attributes.getStringOr(key, "");
+					if (!id.isEmpty()) value += positivePrice(id);
+				}
+				String enrichment = attributes.getStringOr("talisman_enrichment", "");
+				if (!enrichment.isEmpty()) value += positivePrice("TALISMAN_ENRICHMENT_" + enrichment.toUpperCase(Locale.ROOT));
+
+				CompoundTag gems = attributes.getCompoundOrEmpty("gems");
+				for (String slot : gems.keySet()) {
+					String quality = gems.getStringOr(slot, "").toUpperCase(Locale.ROOT);
+					if (!quality.matches("ROUGH|FLAWED|FINE|FLAWLESS|PERFECT")) continue;
+					String type = slot.replaceFirst("_[0-9]+$", "").replaceFirst("_gem$", "").toUpperCase(Locale.ROOT);
+					value += positivePrice(quality + "_" + type + "_GEM");
+				}
+				return value;
+			} catch (Exception ignored) {
+				return 0;
+			}
+		}
+
+		private long positivePrice(String internalName) {
+			if (internalName == null || internalName.isEmpty()) return 0;
+			return Math.max(0, getPrice(internalName));
 		}
 
 		public String getLatestProfile() {

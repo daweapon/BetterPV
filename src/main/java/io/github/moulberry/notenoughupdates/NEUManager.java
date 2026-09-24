@@ -104,6 +104,7 @@ public class NEUManager {
 	/** Item renames after the 1.13 flattening, which {@code ItemStackTheFlatteningFix} doesn't cover. */
 	private static final Map<String, String> POST_FLATTENING_RENAMES = Map.of(
 		"minecraft:sign", "minecraft:oak_sign",
+		"minecraft:melon_block", "minecraft:melon",
 		"minecraft:rose_red", "minecraft:red_dye",
 		"minecraft:dandelion_yellow", "minecraft:yellow_dye",
 		"minecraft:cactus_green", "minecraft:green_dye",
@@ -115,6 +116,8 @@ public class NEUManager {
 	public NEUManager(NotEnoughUpdates neu, File configLocation) {
 		this.neu = neu;
 		this.auctionManager = new APIManager(this);
+		this.auctionManager.updateLowestBin();
+		this.auctionManager.updateBazaar();
 
 		if (!configLocation.exists()) {
 			configLocation.mkdirs();

@@ -248,6 +248,7 @@ public class BasicPage implements GuiProfileViewerPage {
 					instance.tooltipToDisplay = Utils.createList(
 						ChatFormatting.GREEN + "Net worth in IRL money: " + ChatFormatting.DARK_GREEN + "$" + ChatFormatting.GOLD + networthIRLMoney,
 						"",
+						ChatFormatting.GRAY + "Item prices provided by SkyCofl",
 						ChatFormatting.GRAY + "[This is a joke, please don't actually trade real money]"
 					);
 				}
@@ -258,7 +259,18 @@ public class BasicPage implements GuiProfileViewerPage {
 		if (status != null) {
 			JsonElement onlineElement = Utils.getElement(status, "online");
 			boolean online = onlineElement != null && onlineElement.isJsonPrimitive() && onlineElement.getAsBoolean();
-			String statusStr = online ? ChatFormatting.GREEN + "ONLINE" : ChatFormatting.RED + "OFFLINE";
+			JsonObject player = profile.getHypixelProfile();
+			JsonElement lastLoginElement = Utils.getElement(player, "lastLogin");
+			JsonElement lastLogoutElement = Utils.getElement(player, "lastLogout");
+			JsonElement onlineSetting = Utils.getElement(player, "settings.apiSettings.onlineStatus");
+			boolean timestampsHidden = (lastLoginElement == null || lastLoginElement.isJsonNull())
+				&& (lastLogoutElement == null || lastLogoutElement.isJsonNull());
+			boolean settingDisabled = onlineSetting != null && onlineSetting.isJsonPrimitive()
+				&& onlineSetting.getAsJsonPrimitive().isBoolean() && !onlineSetting.getAsBoolean();
+			// Hypixel redacts both timestamps when the player disables the Online Status API setting.
+			boolean apiOff = !online && (timestampsHidden || settingDisabled);
+			String statusStr = online ? ChatFormatting.GREEN + "ONLINE"
+				: apiOff ? ChatFormatting.YELLOW + "API OFF" : ChatFormatting.RED + "OFFLINE";
 			RenderUtils.drawStringCentered(graphics, statusStr, fr, guiLeft + 63, guiTop + 160, true, 0);
 		}
 
