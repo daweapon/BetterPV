@@ -276,9 +276,9 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 
 			ItemStack helmetIcon = repoIconOrNull(entry.getKey());
 			if (helmetIcon != null) {
-				RenderUtils.drawItemStack(graphics, helmetIcon, x - 2, y - 4);
+				RenderUtils.drawItemStack(graphics, helmetIcon, x, y);
 			}
-			RenderUtils.text(graphics, instance.getFont(), entry.getValue().getLeft(), x + 16, y + 4, 0xFFFFFF, true);
+			RenderUtils.text(graphics, instance.getFont(), entry.getValue().getLeft(), x + 20, y + 4, 0xFFFFFF, true);
 
 			int hasValue = trophiesPerTier[integer - 1];
 			int neededValue = integer == 1 ? 15 : 18;
@@ -301,13 +301,32 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 	/** Inner right edge of the helmet-tier panel in the page texture, relative to guiLeft. */
 	private static final int HELMET_PANEL_RIGHT = 142;
 
-	/** Filled circle, drawn as one horizontal span per pixel row. */
+	/** Filled circle with one-pixel alpha-smoothed edges. */
 	private static void fillCircle(GuiGraphicsExtractor graphics, int centerX, int centerY, int radius, int argb) {
 		for (int dy = -radius; dy < radius; dy++) {
 			float rowCenter = dy + 0.5f;
-			int halfWidth = Math.round((float) Math.sqrt(radius * radius - rowCenter * rowCenter));
-			graphics.fill(centerX - halfWidth, centerY + dy, centerX + halfWidth, centerY + dy + 1, argb);
+			float halfWidth = (float) Math.sqrt(radius * radius - rowCenter * rowCenter);
+			float leftEdge = centerX - halfWidth;
+			float rightEdge = centerX + halfWidth;
+			int leftPixel = (int) Math.floor(leftEdge);
+			int rightPixel = (int) Math.ceil(rightEdge) - 1;
+			int y = centerY + dy;
+
+			float leftCoverage = Math.min(1, leftPixel + 1 - leftEdge);
+			graphics.fill(leftPixel, y, leftPixel + 1, y + 1, scaleAlpha(argb, leftCoverage));
+			if (rightPixel > leftPixel + 1) {
+				graphics.fill(leftPixel + 1, y, rightPixel, y + 1, argb);
+			}
+			if (rightPixel > leftPixel) {
+				float rightCoverage = Math.min(1, rightEdge - rightPixel);
+				graphics.fill(rightPixel, y, rightPixel + 1, y + 1, scaleAlpha(argb, rightCoverage));
+			}
 		}
+	}
+
+	private static int scaleAlpha(int argb, float coverage) {
+		int alpha = Math.round(((argb >>> 24) & 0xFF) * coverage);
+		return (argb & 0x00FFFFFF) | (alpha << 24);
 	}
 
 	private int[] getTrophiesPerTier(JsonObject trophyFish) {
