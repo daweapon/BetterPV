@@ -18,7 +18,7 @@
  *
  * Portions of this code are from the SkyBlockPv mod (https://github.com/meowdding/skyblock-pv, MIT with
  * attribution): the skill-tree powder maths (total earned minus spent in the selected tree), the Rock pet brackets,
- * and the crystal / Glacite tooltips.
+ * the crystal / Glacite tooltips, and the sub-page categories (see the {@code mining} package).
  */
 
 package io.github.moulberry.notenoughupdates.profileviewer;
@@ -29,6 +29,8 @@ import com.google.gson.JsonObject;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.core.util.StringUtils;
 import io.github.moulberry.notenoughupdates.profileviewer.hotm.HotmTree;
+import io.github.moulberry.notenoughupdates.profileviewer.mining.GlacitePage;
+import io.github.moulberry.notenoughupdates.profileviewer.mining.MiningGearPage;
 import io.github.moulberry.notenoughupdates.util.Constants;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
@@ -43,6 +45,7 @@ import net.minecraft.world.item.Items;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -111,8 +114,30 @@ public class MiningPage implements GuiProfileViewerPage {
 	/** Pixels scrolled up from the bottom of the tree, where it starts. */
 	private int scroll = 0;
 
+	/** Sub-pages, picked with the buttons down the left side of the window (SkyBlockPv's mining categories). */
+	private enum Category {
+		HOTM("Heart of the Mountain"),
+		GEAR("Mining Gear"),
+		GLACITE("Glacite Tunnels");
+
+		final String displayName;
+
+		Category(String displayName) {
+			this.displayName = displayName;
+		}
+	}
+
+	private static final int CATEGORY_SIZE = 22;
+	private static final int CATEGORY_PITCH = 25;
+
+	private Category category = Category.HOTM;
+	private final Map<Category, GuiProfileViewerPage> subPages = new EnumMap<>(Category.class);
+	private final Map<Category, ItemStack> categoryIcons = new EnumMap<>(Category.class);
+
 	public MiningPage(GuiProfileViewer instance) {
 		this.instance = instance;
+		subPages.put(Category.GEAR, new MiningGearPage(instance));
+		subPages.put(Category.GLACITE, new GlacitePage(instance));
 	}
 
 	@Override
@@ -124,10 +149,27 @@ public class MiningPage implements GuiProfileViewerPage {
 	public void resetCache() {
 		hotmLevels.clear();
 		scroll = 0;
+		subPages.values().forEach(GuiProfileViewerPage::resetCache);
+	}
+
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+		int guiLeft = GuiProfileViewer.getGuiLeft();
+		int guiTop = GuiProfileViewer.getGuiTop();
+		for (Category each : Category.values()) {
+			if (Utils.isWithinRect((int) mouseX, (int) mouseY, guiLeft - CATEGORY_SIZE - 3,
+				guiTop + 6 + each.ordinal() * CATEGORY_PITCH, CATEGORY_SIZE, CATEGORY_SIZE)) {
+				if (category != each) RenderUtils.playPressSound();
+				category = each;
+				return true;
+			}
+		}
+		return category != Category.HOTM && subPages.get(category).mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+		if (category != Category.HOTM) return false;
 		int guiLeft = GuiProfileViewer.getGuiLeft();
 		int guiTop = GuiProfileViewer.getGuiTop();
 		if (!Utils.isWithinRect((int) mouseX, (int) mouseY, guiLeft + TREE_LEFT, guiTop + TREE_TOP,
@@ -144,6 +186,39 @@ public class MiningPage implements GuiProfileViewerPage {
 
 	@Override
 	public void drawPage(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+		if (category == Category.HOTM) drawHotm(graphics, mouseX, mouseY);
+		else subPages.get(category).drawPage(graphics, mouseX, mouseY, partialTicks);
+		drawCategoryButtons(graphics, mouseX, mouseY);
+	}
+
+	private void drawCategoryButtons(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		int x = GuiProfileViewer.getGuiLeft() - CATEGORY_SIZE - 3;
+		for (Category each : Category.values()) {
+			int y = GuiProfileViewer.getGuiTop() + 6 + each.ordinal() * CATEGORY_PITCH;
+			boolean selected = each == category;
+			boolean hovered = Utils.isWithinRect(mouseX, mouseY, x, y, CATEGORY_SIZE, CATEGORY_SIZE);
+			int border = selected ? 0xFFAAAAAA : 0xFF555555;
+			graphics.fill(x, y, x + CATEGORY_SIZE, y + CATEGORY_SIZE, border);
+			graphics.fill(x + 1, y + 1, x + CATEGORY_SIZE - 1, y + CATEGORY_SIZE - 1,
+				selected ? 0xFF3A3A3A : hovered ? 0xFF2C2C2C : 0xFF1E1E1E);
+			RenderUtils.drawItemStack(graphics, categoryIcon(each), x + 3, y + 3);
+			if (hovered) instance.tooltipToDisplay = List.of((selected ? "§a" : "§7") + each.displayName);
+		}
+	}
+
+	private ItemStack categoryIcon(Category each) {
+		return categoryIcons.computeIfAbsent(each, key -> switch (key) {
+			// Heart of the Mountain head texture from SkyBlockPv's repo (pv/skull_textures.json).
+			case HOTM -> Utils.createSkull("", "2361bcef6d1c4eb58ca05341c4e80c4c", HOTM_SKULL);
+			case GEAR -> new ItemStack(Items.PRISMARINE_SHARD);
+			case GLACITE -> new ItemStack(Items.BLUE_ICE);
+		});
+	}
+
+	private static final String HOTM_SKULL =
+		"ewogICJ0aW1lc3RhbXAiIDogMTYxOTAxNDUyMjgzOCwKICAicHJvZmlsZUlkIiA6ICIyMzYxYmNlZjZkMWM0ZWI1OGNhMDUzNDFjNGU4MGM0YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJIaXJvQ2FwdWNjaW5vODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODZmMDZlYWEzMDA0YWVlZDA5YjNkNWI0NWQ5NzZkZTU4NGU2OTFjMGU5Y2FkZTEzMzYzNWRlOTNkMjNiOWVkYiIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9";
+
+	private void drawHotm(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		int guiLeft = GuiProfileViewer.getGuiLeft();
 		int guiTop = GuiProfileViewer.getGuiTop();
 		Font font = instance.getFont();

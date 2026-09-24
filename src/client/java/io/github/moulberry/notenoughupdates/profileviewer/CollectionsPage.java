@@ -27,6 +27,7 @@ import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Port of the Forge 1.8.9 {@code CollectionsPage} ("Collections" tab: collection grid + minion tier grid, with a
@@ -91,6 +93,27 @@ public class CollectionsPage implements GuiProfileViewerPage {
 		return instance;
 	}
 
+	private static List<String> withoutNulls(List<String> list) {
+		if (list == null) return null;
+		List<String> result = new ArrayList<>(list);
+		result.removeIf(Objects::isNull);
+		return result;
+	}
+
+	/**
+	 * Slot behind a collection or minion: NEU's grey slot, filled gold from the bottom by how close it is to max
+	 * (NEU tinted the same texture with 255, 185, 0).
+	 */
+	private static void drawSlot(GuiGraphicsExtractor graphics, int x, int y, float completedness) {
+		int gold = Math.round(20 * Math.max(0, Math.min(1, completedness)));
+		if (gold < 20) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, pv_elements, x, y, 0, 0, 20, 20 - gold, 256, 256, 0xFFFFFFFF);
+		}
+		if (gold > 0) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, pv_elements, x, y + 20 - gold, 0, 20 - gold, 20, gold, 256, 256, 0xFFFFB900);
+		}
+	}
+
 	@Override
 	public void drawPage(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		int guiLeft = GuiProfileViewer.getGuiLeft();
@@ -129,13 +152,13 @@ public class CollectionsPage implements GuiProfileViewerPage {
 					);
 					RenderUtils.drawItemStack(graphics, stack, guiLeft + 9, guiTop + 12 + collectionCatYSize * yIndex);
 				}
-				RenderUtils.text(graphics, instance.getFont(), "" + (yIndex + 1), guiLeft + 15, guiTop + 18 + collectionCatYSize * yIndex, 0xFFFFFF, true);
 				yIndex++;
 			}
 		}
 
-		List<String> collections = ProfileViewer.getCollectionCatToCollectionMap().get(selectedCollectionCategory);
-		List<String> minions = ProfileViewer.getCollectionCatToMinionMap().get(selectedCollectionCategory);
+		// The minion list has null placeholders (collections without a minion); drop them so the grid packs.
+		List<String> collections = withoutNulls(ProfileViewer.getCollectionCatToCollectionMap().get(selectedCollectionCategory));
+		List<String> minions = withoutNulls(ProfileViewer.getCollectionCatToMinionMap().get(selectedCollectionCategory));
 
 		maxPage = Math.max((collections != null ? collections.size() : 0) / 20, (minions != null ? minions.size() : 0) / 20);
 
@@ -190,14 +213,7 @@ public class CollectionsPage implements GuiProfileViewerPage {
 							tierStringColour = new Color(255, 215, 0).getRGB();
 						}
 
-						RenderUtils.drawTexturedRect(
-							graphics, pv_elements, guiLeft + x, guiTop + y, 20, 20 * (1 - completedness),
-							0, 20 / 256f, 0, 20 * (1 - completedness) / 256f
-						);
-						RenderUtils.drawTexturedRect(
-							graphics, pv_elements, guiLeft + x, guiTop + y + 20 * (1 - completedness), 20, 20 * (completedness),
-							0, 20 / 256f, 20 * (1 - completedness) / 256f, 20 / 256f
-						);
+						drawSlot(graphics, guiLeft + (int) x, guiTop + (int) y, completedness);
 						RenderUtils.drawItemStack(graphics, collectionItem, guiLeft + (int) x + 2, guiTop + (int) y + 2);
 
 						if (mouseX > guiLeft + (int) x + 2 && mouseX < guiLeft + (int) x + 18) {
@@ -267,14 +283,7 @@ public class CollectionsPage implements GuiProfileViewerPage {
 						tierStringColour = new Color(255, 215, 0).getRGB();
 					}
 
-					RenderUtils.drawTexturedRect(
-						graphics, pv_elements, guiLeft + x, guiTop + y, 20, 20 * (1 - completedness),
-						0, 20 / 256f, 0, 20 * (1 - completedness) / 256f
-					);
-					RenderUtils.drawTexturedRect(
-						graphics, pv_elements, guiLeft + x, guiTop + y + 20 * (1 - completedness), 20, 20 * (completedness),
-						0, 20 / 256f, 20 * (1 - completedness) / 256f, 20 / 256f
-					);
+					drawSlot(graphics, guiLeft + (int) x, guiTop + (int) y, completedness);
 
 					String minionIconInternalName = minion + "_GENERATOR_" + Math.max(tier, 1);
 					ItemStack minionIcon = minionIconCache.computeIfAbsent(minionIconInternalName, name -> {
@@ -290,11 +299,10 @@ public class CollectionsPage implements GuiProfileViewerPage {
 
 					if (mouseX > guiLeft + (int) x + 2 && mouseX < guiLeft + (int) x + 18) {
 						if (mouseY > guiTop + (int) y + 2 && mouseY < guiTop + (int) y + 18) {
-							instance.tooltipToDisplay = Utils.createList(
-								Utils.getElementAsString(Utils.getElement(misc, "minions." + minion + "_NAME"), minion) +
-									" " +
-									tierString
-							);
+							// The repo has no minion names, so use the minion item's own (e.g. "Clay Minion XI").
+							String name = minionIcon != null && tier > 0 ? minionIcon.getHoverName().getString()
+								: Utils.getElementAsString(Utils.getElement(misc, "minions." + minion + "_NAME"), minion) + " " + tierString;
+							instance.tooltipToDisplay = Utils.createList(name);
 						}
 					}
 

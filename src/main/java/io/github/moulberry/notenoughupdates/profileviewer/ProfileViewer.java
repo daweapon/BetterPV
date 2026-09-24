@@ -21,6 +21,7 @@ package io.github.moulberry.notenoughupdates.profileviewer;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.github.moulberry.notenoughupdates.NEUManager;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -260,7 +262,8 @@ public class ProfileViewer {
 						null,
 						"SHEEP",
 						"RABBIT",
-						"NETHER_WARTS"
+						"NETHER_WARTS",
+						"SUNFLOWER"
 					)
 				);
 				put(
@@ -307,11 +310,12 @@ public class ProfileViewer {
 						"REVENANT",
 						"TARANTULA",
 						"VOIDLING",
-						"INFERNO"
+						"INFERNO",
+						"VAMPIRE"
 					)
 				);
 				put(CAT_FORAGING, Utils.createList("OAK", "SPRUCE", "BIRCH", "DARK_OAK", "ACACIA", "JUNGLE", "FLOWER"));
-				put(CAT_FISHING, Utils.createList("FISHING", null, null, null, null, null, "CLAY", null, null, null));
+				put(CAT_FISHING, Utils.createList("FISHING", null, null, null, null, null, "CLAY", "LILY_PAD", null, null));
 			}
 		};
 	private static final LinkedHashMap<String, ItemStack> collectionToCollectionDisplayMap =
@@ -1315,9 +1319,49 @@ public class ProfileViewer {
 				}
 			}
 
+			// The wardrobe moved to loadout.armor / loadout.equipment: numbered sets, each slot its own NBT blob.
+			// Kept in set order with a null for each empty slot, four per set.
+			inventoryInfo.add("loadout_armor", getLoadoutItems(
+				Utils.getElement(profileInfo, "loadout.armor"), "HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"));
+			inventoryInfo.add("loadout_equipment", getLoadoutItems(
+				Utils.getElement(profileInfo, "loadout.equipment"),
+				"EQUIPMENT_SLOT_1", "EQUIPMENT_SLOT_2", "EQUIPMENT_SLOT_3", "EQUIPMENT_SLOT_4"));
+
 			inventoryCacheMap.put(profileName, inventoryInfo);
 
 			return inventoryInfo;
+		}
+
+		private JsonArray getLoadoutItems(JsonElement sets, String... slots) {
+			JsonArray contents = new JsonArray();
+			if (!(sets instanceof JsonObject setsObject)) return contents;
+			TreeMap<Integer, JsonObject> ordered = new TreeMap<>();
+			for (Map.Entry<String, JsonElement> entry : setsObject.entrySet()) {
+				if (!(entry.getValue() instanceof JsonObject set)) continue;
+				try {
+					ordered.put(Integer.parseInt(entry.getKey()), set);
+				} catch (NumberFormatException ignored) {
+					// equipped_set
+				}
+			}
+			for (JsonObject set : ordered.values()) {
+				for (String slot : slots) {
+					JsonObject item = null;
+					String data = Utils.getElementAsString(Utils.getElement(set, slot + ".data"), "");
+					if (!data.isEmpty()) {
+						try {
+							ListTag items = NbtIo.readCompressed(
+								new ByteArrayInputStream(Base64.getDecoder().decode(data)),
+								NbtAccounter.unlimitedHeap()
+							).getListOrEmpty("i");
+							if (!items.isEmpty()) item = manager.getJsonFromNBTEntry(items.getCompoundOrEmpty(0));
+						} catch (IOException | IllegalArgumentException ignored) {
+						}
+					}
+					contents.add(item == null ? JsonNull.INSTANCE : item);
+				}
+			}
+			return contents;
 		}
 
 		public JsonObject getBackpackData(JsonObject backpackContentsJson, JsonObject backpackIcons) {
