@@ -249,7 +249,7 @@ public class BasicPage implements GuiProfileViewerPage {
 						ChatFormatting.GREEN + "Net worth in IRL money: " + ChatFormatting.DARK_GREEN + "$" + ChatFormatting.GOLD + networthIRLMoney,
 						"",
 						ChatFormatting.GRAY + "Item prices provided by SkyCofl",
-						ChatFormatting.GRAY + "[This is a joke, please don't actually trade real money]"
+						ChatFormatting.GRAY + "(This is a joke, please don't actually trade real money)"
 					);
 				}
 			} catch (Exception ignored) {
