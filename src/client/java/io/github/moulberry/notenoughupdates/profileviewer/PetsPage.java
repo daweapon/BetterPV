@@ -28,8 +28,13 @@ import io.github.moulberry.notenoughupdates.util.PetData;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.core.Rotations;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.apache.commons.lang3.text.WordUtils;
@@ -52,8 +57,8 @@ import java.util.Map;
  *   original's {@code ItemUtils#createPetItemstackFromPetInfo} (which also applied held-item skin/stat-boost
  *   lore replacements - not ported, see {@link PetData.Rarity} javadoc). Falls back to rarity-tinted initials
  *   text if the repo hasn't been synced or doesn't have the pet.</li>
- *   <li>The selected pet's bobbing icon is rendered at native 16px instead of the original's 3.5x-scaled GL
- *   matrix render, for simplicity.</li>
+ *   <li>The selected pet's head is a mouse-following 3D model with its name above it, like the basic page's
+ *   player, instead of the original's bobbing 3.5x item icon.</li>
  *   <li>Day/night panorama selection ({@code SBInfo}) wasn't ported in the data layer either (same as
  *   {@link BasicPage}); always uses the "day" variant.</li>
  * </ul>
@@ -88,6 +93,12 @@ public class PetsPage implements GuiProfileViewerPage {
 	private static final int SORT_X = 176;
 	private static final int SORT_Y = 6;
 	private int sortMode = 0;
+
+	/** Wears the selected pet's head for {@link #drawPetHead}; the icon it's wearing is kept to skip re-equipping. */
+	private ArmorStand headStand;
+	private ItemStack headStandHead;
+	/** Height of a worn head's centre above an armor stand's feet, in blocks. */
+	private static final float HEAD_CENTRE = 1.75f;
 
 	public PetsPage(GuiProfileViewer instance) {
 		this.instance = instance;
@@ -257,24 +268,15 @@ public class PetsPage implements GuiProfileViewerPage {
 			PetData.Rarity rarity = PetData.Rarity.valueOf(pet.get("tier").getAsString());
 			String colouredName = rarity.chatFormatting + formatPetName(petType);
 
-			int x = guiLeft + 280;
-			float y = guiTop + 67 + 15 * (float) Math.sin(
-				((instance.currentTime - instance.startTime) / 800f) % (2 * Math.PI));
-
-			int displayLen = instance.getFont().width(colouredName);
-			int halfDisplayLen = displayLen / 2;
-
-			graphics.fill((int) (x - halfDisplayLen - 1 - 28), (int) (y - 1), (int) (x + halfDisplayLen + 1 - 28), (int) (y + 8), 0x64000000);
-			RenderUtils.text(graphics, instance.getFont(), colouredName, x - halfDisplayLen - 28, (int) y, 0xFFFFFF, true);
-
-			ItemStack detailIcon = sortedPetIcons.get(selectedPet);
-			if (detailIcon != null) {
-				// TODO(fabric-port): the original rendered this at 3.5x scale via a manual GL matrix; kept at
-				// native 16px here for simplicity.
-				RenderUtils.drawItemStack(graphics, detailIcon, (int) (x - halfDisplayLen - 28 - 20), (int) y - 4);
-			}
-
 			float level = pet.get("level").getAsFloat();
+
+			drawPetHead(graphics, sortedPetIcons.get(selectedPet), guiLeft, guiTop, mouseX, mouseY);
+			// Name above the head, the way the basic page names the player model.
+			RenderUtils.drawStringCenteredScaledMaxWidth(
+				graphics, colouredName, instance.getFont(),
+				guiLeft + 252.5f, guiTop + 51, true, 81, 0xFFFFFF
+			);
+
 			float currentLevelRequirement = pet.get("currentLevelRequirement").getAsFloat();
 			float exp = pet.get("exp").getAsFloat();
 			float maxXP = pet.get("maxXP").getAsFloat();
@@ -283,10 +285,13 @@ public class PetsPage implements GuiProfileViewerPage {
 				graphics, colouredName, ChatFormatting.WHITE + "Level " + (int) Math.floor(level), guiLeft + 319, guiTop + 28, 98
 			);
 
-			instance.renderBar(graphics, guiLeft + 319, guiTop + 38, 98, (float) Math.floor(level) / 100f);
-
-			// A max-level pet has no next level: show MAX with the rainbow bar, like maxed skills.
+			// A max-level pet has no next level: show MAX with rainbow bars, like maxed skills.
 			boolean maxed = exp >= maxXP;
+			if (maxed) {
+				instance.renderGoldBar(graphics, guiLeft + 319, guiTop + 38, 98);
+			} else {
+				instance.renderBar(graphics, guiLeft + 319, guiTop + 38, 98, (float) Math.floor(level) / 100f);
+			}
 			RenderUtils.renderAlignedString(
 				graphics,
 				ChatFormatting.YELLOW + "To Next LVL",
@@ -309,7 +314,11 @@ public class PetsPage implements GuiProfileViewerPage {
 				guiTop + 64,
 				98
 			);
-			instance.renderBar(graphics, guiLeft + 319, guiTop + 74, 98, exp / maxXP);
+			if (maxed) {
+				instance.renderGoldBar(graphics, guiLeft + 319, guiTop + 74, 98);
+			} else {
+				instance.renderBar(graphics, guiLeft + 319, guiTop + 74, 98, exp / maxXP);
+			}
 
 			RenderUtils.renderAlignedString(
 				graphics,
@@ -336,6 +345,40 @@ public class PetsPage implements GuiProfileViewerPage {
 				98
 			);
 		}
+	}
+
+	/**
+	 * The selected pet's head as a 3D model in the panorama box, turning to follow the mouse like the basic page's
+	 * player model. It's worn by an invisible armor stand (which only draws what it wears), drawn with the same
+	 * vanilla inventory-preview helper; the stand is never added to the world.
+	 */
+	private void drawPetHead(GuiGraphicsExtractor graphics, ItemStack head, int guiLeft, int guiTop, int mouseX, int mouseY) {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft.level == null || minecraft.player == null || head == null) return;
+		if (headStand == null || headStand.level() != minecraft.level) {
+			headStand = new ArmorStand(minecraft.level, 0, 0, 0);
+			headStand.setInvisible(true);
+			headStandHead = null;
+		}
+		if (headStandHead != head) {
+			headStand.setItemSlot(EquipmentSlot.HEAD, head);
+			headStandHead = head;
+		}
+		// Far above the camera, like the player model, so it's lit by full sky light.
+		headStand.setPos(minecraft.player.getX(), minecraft.player.getY() + 1000, minecraft.player.getZ());
+
+		int x0 = guiLeft + 212, y0 = guiTop + 60, x1 = guiLeft + 293, y1 = guiTop + 152;
+		// The armor stand renderer ignores the body/head angles the helper sets, so aim it the same way here: the
+		// body faces the mouse a little and the head (its pose is relative to the body) the rest of the way.
+		float yaw = (float) Math.atan(((x0 + x1) / 2f - mouseX) / 40f) * 20;
+		float pitch = (float) Math.atan(((y0 + y1) / 2f - mouseY) / 40f) * 20;
+		headStand.setYRot(180 + yaw);
+		headStand.yRotO = 180 + yaw;
+		headStand.setHeadPose(new Rotations(-pitch, yaw, 0));
+		// The helper centres the point HEAD_CENTRE blocks up the stand in the box.
+		InventoryScreen.extractEntityInInventoryFollowsMouse(
+			graphics, x0, y0, x1, y1, 50, HEAD_CENTRE - headStand.getBbHeight() / 2, mouseX, mouseY, headStand
+		);
 	}
 
 	/** Re-sorts the pets and their icons together, keeping the selected pet selected and going back to page 1. */
