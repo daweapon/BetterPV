@@ -22,12 +22,16 @@ package io.github.moulberry.notenoughupdates.profileviewer.trophy;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.github.moulberry.notenoughupdates.NEUManager;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewerPage;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
+import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
@@ -130,6 +134,7 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 	 * and rationale in {@code InventoriesPage#resolvedIconCache}.
 	 */
 	private final Map<String, ItemStack> iconCache = new HashMap<>();
+	private final Map<String, Identifier> textureCache = new HashMap<>();
 
 	public TrophyFishPage(GuiProfileViewer instance) {
 		this.instance = instance;
@@ -232,10 +237,7 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 			if (trophyFishRarityIntegerMap.containsKey(TrophyFish.TrophyFishRarity.GOLD)) tint = 0xFFFFD100;
 			if (trophyFishRarityIntegerMap.containsKey(TrophyFish.TrophyFishRarity.DIAMOND)) tint = 0xFF1FD8F1;
 			fillCircle(graphics, x + 8, y + 8, 10, (tint & 0x00FFFFFF) | SLOT_ALPHA);
-			ItemStack fishIcon = resolveFishIcon(value.getName());
-			if (fishIcon != null) {
-				RenderUtils.drawItemStack(graphics, fishIcon, x, y);
-			}
+			drawFishIcon(graphics, value.getName(), trophyFishRarityIntegerMap, x, y);
 
 			if (mouseX >= x - 2 && mouseX < x + 18 && mouseY >= y - 2 && mouseY <= y + 18) {
 				instance.tooltipToDisplay = getTooltip(value.getName(), value.getTrophyFishRarityIntegerMap());
@@ -253,10 +255,7 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 				y = guiTop + slot.getRight();
 
 				fillCircle(graphics, x + 8, y + 8, 10, 0x555555 | SLOT_ALPHA);
-				ItemStack undiscoveredIcon = resolveFishIcon(difference);
-				if (undiscoveredIcon != null) {
-					RenderUtils.drawItemStack(graphics, undiscoveredIcon, x, y);
-				}
+				drawFishIcon(graphics, difference, null, x, y);
 
 				if (mouseX >= x - 2 && mouseX < x + 18 && mouseY >= y - 2 && mouseY <= y + 18) {
 					instance.tooltipToDisplay = getTooltip(difference, null);
@@ -471,16 +470,74 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 		return description;
 	}
 
-	/** Resolves a trophy fish's icon via its {@code <FISH>_BRONZE} repo entry (the bronze-trophy skull texture). */
-	private ItemStack resolveFishIcon(String name) {
-		String repoName = name.toUpperCase(Locale.US).replace(" ", "_") + "_BRONZE";
-		return repoIconOrNull(repoName);
+	/**
+	 * Draws a trophy fish's icon for the highest tier caught ({@code <FISH>_DIAMOND} down to {@code <FISH>_BRONZE});
+	 * undiscovered fish (null map) show the bronze icon. The bundled texture is blitted directly so that mods which
+	 * retexture or hide SkyBlock items (they only touch item rendering) cannot blank it; the item stack is only a
+	 * fallback for fish that have no bundled texture.
+	 */
+	private void drawFishIcon(
+		GuiGraphicsExtractor graphics,
+		String name,
+		Map<TrophyFish.TrophyFishRarity, Integer> caught,
+		int x,
+		int y
+	) {
+		String tier = "BRONZE";
+		if (caught != null) {
+			if (caught.containsKey(TrophyFish.TrophyFishRarity.SILVER)) tier = "SILVER";
+			if (caught.containsKey(TrophyFish.TrophyFishRarity.GOLD)) tier = "GOLD";
+			if (caught.containsKey(TrophyFish.TrophyFishRarity.DIAMOND)) tier = "DIAMOND";
+		}
+		String base = name.toUpperCase(Locale.US).replace(" ", "_");
+		for (String repoName : new String[]{base + "_" + tier, base + "_BRONZE"}) {
+			Identifier texture = fishTexture(repoName);
+			if (texture != null) {
+				RenderUtils.drawTexturedRect(graphics, texture, x, y, 16, 16);
+				return;
+			}
+			ItemStack icon = repoIconOrNull(repoName);
+			if (icon != null) {
+				RenderUtils.drawItemStack(graphics, icon, x, y);
+				return;
+			}
+		}
+	}
+
+	/** The bundled texture of a repo trophy item, derived from its {@code ItemModel} (model path = texture path). */
+	private Identifier fishTexture(String internalname) {
+		if (textureCache.containsKey(internalname)) return textureCache.get(internalname);
+		Identifier texture = null;
+		JsonObject json = NotEnoughUpdates.INSTANCE.manager.getItemInformation().get(internalname);
+		if (json != null && json.has("nbttag")) {
+			try {
+				String model = Utils.parseLegacyNbt(json.get("nbttag").getAsString()).getStringOr("ItemModel", "");
+				Identifier modelId = Identifier.tryParse(model);
+				if (modelId != null) {
+					Identifier candidate = Identifier.fromNamespaceAndPath(modelId.getNamespace(), "textures/" + modelId.getPath() + ".png");
+					if (Minecraft.getInstance().getResourceManager().getResource(candidate).isPresent()) texture = candidate;
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		textureCache.put(internalname, texture);
+		return texture;
 	}
 
 	private ItemStack repoIconOrNull(String internalname) {
 		if (iconCache.containsKey(internalname)) return iconCache.get(internalname);
 		JsonObject json = NotEnoughUpdates.INSTANCE.manager.getItemInformation().get(internalname);
 		ItemStack icon = json != null ? NotEnoughUpdates.INSTANCE.manager.jsonToStack(json) : null;
+		// Modern repo trophy fish are paper carrying Hypixel's item-model component. Force that declared model here:
+		// the normal repo-item safety fallback may have cached the paper before the server resource pack finished loading.
+		if (icon != null && json != null && json.has("nbttag")) {
+			try {
+				String model = Utils.parseLegacyNbt(json.get("nbttag").getAsString()).getStringOr("ItemModel", "");
+				Identifier modelId = Identifier.tryParse(model);
+				if (modelId != null && NEUManager.itemModelExists.test(modelId)) icon.set(DataComponents.ITEM_MODEL, modelId);
+			} catch (Exception ignored) {
+			}
+		}
 		iconCache.put(internalname, icon);
 		return icon;
 	}

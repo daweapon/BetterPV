@@ -29,6 +29,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Better PV's small config file, {@code <config-dir>/notenoughupdates/config.json}, read with Gson. It only holds
@@ -42,12 +44,46 @@ public class BpvConfig {
 
 	private static class Data {
 		String backendUrl = "";
+		List<ProfileHistoryEntry> profileHistory = new ArrayList<>();
+	}
+
+	public static class ProfileHistoryEntry {
+		public String uuid;
+		public String name;
+
+		private ProfileHistoryEntry(String uuid, String name) {
+			this.uuid = uuid;
+			this.name = name;
+		}
 	}
 
 	/** @return an override for the Better PV backend URL, or {@code ""} to use {@link BpvBackend#DEFAULT_BACKEND_URL}. */
 	public static synchronized String getBackendUrl() {
 		if (cached == null) load();
 		return cached.backendUrl == null ? "" : cached.backendUrl.trim();
+	}
+
+	public static synchronized List<ProfileHistoryEntry> getProfileHistory() {
+		if (cached == null) load();
+		if (cached.profileHistory == null) cached.profileHistory = new ArrayList<>();
+		return List.copyOf(cached.profileHistory);
+	}
+
+	public static synchronized void addProfileHistory(String uuid, String name) {
+		if (uuid == null || uuid.isBlank() || name == null || name.isBlank()) return;
+		if (cached == null) load();
+		if (cached.profileHistory == null) cached.profileHistory = new ArrayList<>();
+		for (ProfileHistoryEntry entry : cached.profileHistory) {
+			if (entry != null && (uuid.equalsIgnoreCase(entry.uuid) || name.equalsIgnoreCase(entry.name))) {
+				entry.uuid = uuid;
+				entry.name = name;
+				save();
+				return;
+			}
+		}
+		cached.profileHistory.add(0, new ProfileHistoryEntry(uuid, name));
+		if (cached.profileHistory.size() > 7) cached.profileHistory.subList(7, cached.profileHistory.size()).clear();
+		save();
 	}
 
 	private static File configFile() {
@@ -69,6 +105,16 @@ public class BpvConfig {
 			}
 		} catch (IOException | com.google.gson.JsonParseException e) {
 			NotEnoughUpdates.LOGGER.warn("Failed to read {}: {}", file, e.toString());
+		}
+	}
+
+	private static void save() {
+		File file = configFile();
+		try {
+			file.getParentFile().mkdirs();
+			Files.writeString(file.toPath(), GSON.toJson(cached), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			NotEnoughUpdates.LOGGER.warn("Failed to write {}: {}", file, e.toString());
 		}
 	}
 }

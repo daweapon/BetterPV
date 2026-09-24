@@ -41,9 +41,7 @@ public class ProfilePlayerEntity extends RemotePlayer {
 	/** Mojang profiles with skin textures, by UUID. A null value means the fetch is still running or failed. */
 	private static final Map<UUID, GameProfile> TEXTURED_PROFILES = new ConcurrentHashMap<>();
 	private static final Map<UUID, Boolean> REQUESTED = new ConcurrentHashMap<>();
-
-	private GameProfile skinProfile;
-	private Supplier<PlayerSkin> skin;
+	private static final Map<UUID, Supplier<PlayerSkin>> SKIN_LOOKUPS = new ConcurrentHashMap<>();
 
 	public ProfilePlayerEntity(ClientLevel level, UUID uuid, String name) {
 		super(level, new GameProfile(uuid, name));
@@ -54,12 +52,23 @@ public class ProfilePlayerEntity extends RemotePlayer {
 
 	@Override
 	public PlayerSkin getSkin() {
-		GameProfile textured = TEXTURED_PROFILES.get(getUUID());
-		if (textured != null && textured != skinProfile) {
-			skinProfile = textured;
-			skin = Minecraft.getInstance().getSkinManager().createLookup(textured, false);
-		}
-		return skin != null ? skin.get() : super.getSkin();
+		PlayerSkin loaded = getLoadedSkin(getUUID());
+		return loaded != null ? loaded : super.getSkin();
+	}
+
+	/** Starts a Mojang skin lookup and returns the loaded skin, or null while it is still loading. */
+	public static PlayerSkin getLoadedSkin(UUID uuid) {
+		requestProfile(uuid);
+		GameProfile textured = TEXTURED_PROFILES.get(uuid);
+		if (textured == null) return null;
+		return SKIN_LOOKUPS.computeIfAbsent(uuid,
+			ignored -> Minecraft.getInstance().getSkinManager().createLookup(textured, false)).get();
+	}
+
+	/** Starts a Mojang profile lookup and returns the texture-bearing profile once available. */
+	public static GameProfile getLoadedProfile(UUID uuid) {
+		requestProfile(uuid);
+		return TEXTURED_PROFILES.get(uuid);
 	}
 
 	private static void requestProfile(UUID uuid) {

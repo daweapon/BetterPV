@@ -26,6 +26,7 @@ import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.profileviewer.bestiary.BestiaryPage;
 import io.github.moulberry.notenoughupdates.profileviewer.trophy.TrophyFishPage;
 import io.github.moulberry.notenoughupdates.util.Constants;
+import io.github.moulberry.notenoughupdates.util.BpvConfig;
 import io.github.moulberry.notenoughupdates.util.PetData;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
@@ -43,6 +44,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
@@ -52,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -118,6 +121,9 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	private boolean profileDropdownSelected = false;
 	private boolean showBingoPage;
 	private final String initialPlayerName;
+	private final Map<String, ItemStack> historyHeads = new HashMap<>();
+	private static final int HISTORY_BUTTON_SIZE = 28;
+	private static final ItemStack LOADING_HISTORY_HEAD = new ItemStack(Items.PLAYER_HEAD);
 
 	public GuiProfileViewer(ProfileViewer.Profile profile) {
 		super(Component.literal("Profile Viewer"));
@@ -129,6 +135,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			name = profile.getHypixelProfile().get("displayname").getAsString();
 		}
 		this.initialPlayerName = name;
+		if (profile != null && !name.isEmpty()) BpvConfig.addProfileHistory(profile.getUuid(), name);
 
 		if (currentPage == ProfileViewerPage.LOADING) {
 			currentPage = ProfileViewerPage.BASIC;
@@ -391,6 +398,8 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 
 		super.extractRenderState(graphics, mouseX, mouseY, partialTicks); // draws the player-name EditBox widget
 
+		renderProfileHistory(graphics, mouseX, mouseY);
+
 		if (profileDropdownSelected && profile != null) {
 			renderProfileDropdown(graphics, mouseX, mouseY);
 		}
@@ -402,6 +411,56 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			}
 			RenderUtils.drawHoveringText(graphics, grayTooltip, mouseX, mouseY);
 			tooltipToDisplay = null;
+		}
+	}
+
+	private void renderProfileHistory(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		List<BpvConfig.ProfileHistoryEntry> history = BpvConfig.getProfileHistory();
+		if (history.isEmpty()) return;
+		int left = guiLeft + sizeX;
+		for (int index = 0; index < history.size(); index++) {
+			BpvConfig.ProfileHistoryEntry entry = history.get(index);
+			int y = guiTop + index * HISTORY_BUTTON_SIZE;
+			boolean selected = profile != null && entry.uuid.equalsIgnoreCase(profile.getUuid());
+			int tabX = selected ? left - 4 : left;
+			int tabWidth = selected ? 32 : 28;
+			boolean hovered = Utils.isWithinRect(mouseX, mouseY, tabX, y, tabWidth, HISTORY_BUTTON_SIZE);
+			graphics.fill(tabX + 2, y + 2, tabX + tabWidth - 2, y + 26, hovered ? 0xA0334A46 : 0x80000000);
+			// Mirror the same raised/pressed vertical tab textures used by DungeonPage onto the right edge.
+			RenderUtils.drawTexturedRect(
+				graphics,
+				pv_elements,
+				tabX,
+				y,
+				tabWidth,
+				28,
+				selected ? 1f : 223 / 256f,
+				selected ? 224 / 256f : 193 / 256f,
+				selected && index > 0 ? 228 / 256f : 200 / 256f,
+				selected && index > 0 ? 1f : 228 / 256f
+			);
+			if (!selected) {
+				// The normal side-tab sprite is open on the panel-facing edge. Mirror its own outer border strip into
+				// that edge so all four sides use the exact same pixels, shade and thickness.
+				RenderUtils.drawTexturedRect(
+					graphics, pv_elements, tabX, y + 2, 2, 24,
+					195 / 256f, 193 / 256f, 202 / 256f, 226 / 256f
+				);
+			}
+			UUID uuid = ProfilePlayerEntity.parseUuid(entry.uuid);
+			ItemStack head = LOADING_HISTORY_HEAD;
+			if (uuid != null) {
+				com.mojang.authlib.GameProfile loadedProfile = ProfilePlayerEntity.getLoadedProfile(uuid);
+				if (loadedProfile != null) {
+					head = historyHeads.computeIfAbsent(entry.uuid, ignored -> {
+						ItemStack loadedHead = new ItemStack(Items.PLAYER_HEAD);
+						loadedHead.set(DataComponents.PROFILE, ResolvableProfile.createResolved(loadedProfile));
+						return loadedHead;
+					});
+				}
+			}
+			RenderUtils.drawItemStack(graphics, head, left + 6, y + 6);
+			if (hovered) tooltipToDisplay = List.of(ChatFormatting.YELLOW + "View " + entry.name);
 		}
 	}
 
@@ -451,7 +510,43 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft + gapEnd, guiTop, sizeX - gapEnd, border,
 				gapEnd / (float) sizeX, 1, 0, v);
 		}
-		RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop + border, sizeX, sizeY - border, 0, 1, v, 1);
+
+		int selectedHistory = selectedHistoryIndex();
+		if (selectedHistory < 0) {
+			RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop + border, sizeX, sizeY - border, 0, 1, v, 1);
+			return;
+		}
+
+		// As with the active top tab, leave the panel border open behind the active history tab so the two shapes
+		// join instead of drawing their borders on top of one another.
+		int historyTabTop = selectedHistory * HISTORY_BUTTON_SIZE;
+		int rightGapStart = Math.max(border, historyTabTop);
+		int rightGapEnd = Math.min(sizeY, historyTabTop + HISTORY_BUTTON_SIZE);
+		if (rightGapStart > border) {
+			RenderUtils.drawTexturedRect(
+				graphics, pv_bg, guiLeft, guiTop + border, sizeX, rightGapStart - border,
+				0, 1, v, rightGapStart / (float) sizeY
+			);
+		}
+		RenderUtils.drawTexturedRect(
+			graphics, pv_bg, guiLeft, guiTop + rightGapStart, sizeX - 4, rightGapEnd - rightGapStart,
+			0, (sizeX - 4) / (float) sizeX, rightGapStart / (float) sizeY, rightGapEnd / (float) sizeY
+		);
+		if (rightGapEnd < sizeY) {
+			RenderUtils.drawTexturedRect(
+				graphics, pv_bg, guiLeft, guiTop + rightGapEnd, sizeX, sizeY - rightGapEnd,
+				0, 1, rightGapEnd / (float) sizeY, 1
+			);
+		}
+	}
+
+	private int selectedHistoryIndex() {
+		if (profile == null) return -1;
+		List<BpvConfig.ProfileHistoryEntry> history = BpvConfig.getProfileHistory();
+		for (int index = 0; index < history.size(); index++) {
+			if (history.get(index).uuid.equalsIgnoreCase(profile.getUuid())) return index;
+		}
+		return -1;
 	}
 
 	private List<ProfileViewerPage> visibleTabs() {
@@ -510,6 +605,21 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		int mouseX = (int) event.x();
 		int mouseY = (int) event.y();
 		List<String> profileNames = profile == null ? Collections.emptyList() : profile.getProfileNames();
+
+		if (event.button() == 0) {
+			List<BpvConfig.ProfileHistoryEntry> history = BpvConfig.getProfileHistory();
+			int left = guiLeft + sizeX;
+			for (int index = 0; index < history.size(); index++) {
+				int y = guiTop + index * HISTORY_BUTTON_SIZE;
+				boolean selected = profile != null && history.get(index).uuid.equalsIgnoreCase(profile.getUuid());
+				int tabX = selected ? left - 4 : left;
+				int tabWidth = selected ? 32 : 28;
+				if (Utils.isWithinRect(mouseX, mouseY, tabX, y, tabWidth, HISTORY_BUTTON_SIZE)) {
+					openHistoryProfile(history.get(index).name);
+					return true;
+				}
+			}
+		}
 
 		if (profileDropdownSelected && event.button() == 0) {
 			int menuBottom = guiTop + sizeY + 3;
@@ -572,6 +682,15 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 
 		profileDropdownSelected = false;
 		return super.mouseClicked(event, doubleClick);
+	}
+
+	private void openHistoryProfile(String name) {
+		currentPage = ProfileViewerPage.LOADING;
+		RenderUtils.playPressSound();
+		NotEnoughUpdates.INSTANCE.getProfileViewer().getProfileByName(name, newProfile -> {
+			if (newProfile != null) newProfile.resetCache();
+			this.minecraft.execute(() -> this.minecraft.setScreen(new GuiProfileViewer(newProfile)));
+		});
 	}
 
 	@Override
