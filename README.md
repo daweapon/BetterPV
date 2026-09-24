@@ -25,10 +25,6 @@ The first time you start the game, Better PV downloads the NotEnoughUpdates item
 | `/bpv` | Opens the settings screen for an optional personal API key. |
 | `/bpv setapi <key>` | Sets an optional personal Hypixel API key. |
 
-## How the server works
-
-Hypixel doesn't allow API keys to be built into client mods, so the key lives on a small [Cloudflare Worker](./backend) instead. When you use `/pv`, the mod proves who you are with the key pair Minecraft already uses for chat signing (no password or token leaves your game), and the Worker fetches the profile from Hypixel for you. Requests are rate-limited per account and briefly cached. See [backend/README.md](./backend/README.md) for details and deployment steps.
-
 ## Credits
 
 - **NotEnoughUpdates.** Better PV is a port of the Profile Viewer from [NotEnoughUpdates](https://github.com/NotEnoughUpdates/NotEnoughUpdates), created by Moulberry and developed by the [NotEnoughUpdates contributors](https://github.com/NotEnoughUpdates/NotEnoughUpdates/graphs/contributors) for Forge 1.8.9. Most of the profile viewer's logic, layouts and textures are their work. Better PV brings it to modern Fabric, adapts it to Hypixel's current API and SkyBlock updates, and leaves out NEU's other features. It also uses NEU's community-maintained [item repo](https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO) for item, pet, bestiary and HOTM data. Their original copyright notices are kept in every ported source file.
