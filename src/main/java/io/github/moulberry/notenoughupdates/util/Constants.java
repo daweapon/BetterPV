@@ -59,6 +59,7 @@ public class Constants {
 	public static JsonObject RNGSCORE;
 	public static JsonObject BESTIARY;
 	public static JsonObject HOTMLAYOUT;
+	public static JsonObject ATTRIBUTE_SHARDS;
 
 	private Constants() {
 	}
@@ -84,6 +85,7 @@ public class Constants {
 		RNGSCORE = readConstant(repoLocation, "rngscore", gson);
 		BESTIARY = readConstant(repoLocation, "bestiary", gson);
 		HOTMLAYOUT = readConstant(repoLocation, "hotmlayout", gson);
+		ATTRIBUTE_SHARDS = readConstant(repoLocation, "attribute_shards", gson);
 	}
 
 	private static JsonObject readConstant(File repoLocation, String constant, Gson gson) {
