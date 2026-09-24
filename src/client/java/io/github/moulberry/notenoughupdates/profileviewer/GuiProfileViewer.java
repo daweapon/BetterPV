@@ -144,6 +144,12 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		pages.put(ProfileViewerPage.BINGO, new BingoPage(this));
 		pages.put(ProfileViewerPage.TROPHY_FISH, new TrophyFishPage(this));
 		pages.put(ProfileViewerPage.BESTIARY, new BestiaryPage(this));
+		pages.put(ProfileViewerPage.FARMING, new PlaceholderPage(this, "Farming"));
+		pages.put(ProfileViewerPage.FORAGING, new PlaceholderPage(this, "Foraging"));
+		pages.put(ProfileViewerPage.LOADOUTS, new PlaceholderPage(this, "Loadouts"));
+		pages.put(ProfileViewerPage.MUSEUM, new PlaceholderPage(this, "Museum"));
+		pages.put(ProfileViewerPage.CHOCOLATE_FACTORY, new PlaceholderPage(this, "Chocolate Factory"));
+		pages.put(ProfileViewerPage.RIFT, new PlaceholderPage(this, "Rift"));
 	}
 
 	@Override
@@ -286,9 +292,12 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		// Panel background.
 		graphics.fill(guiLeft, guiTop, guiLeft + sizeX, guiTop + sizeY, 0x80000000);
 
-		renderTabs(graphics, mouseX, mouseY);
+		renderTabs(graphics, mouseX, mouseY, false);
 
-		RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop, sizeX, sizeY);
+		drawWindowBackground(graphics);
+
+		// The selected tab goes over the window so it joins the panel instead of sitting behind its top border.
+		renderTabs(graphics, mouseX, mouseY, true);
 
 		if (page != ProfileViewerPage.LOADING) {
 			if (profile != null) {
@@ -392,6 +401,33 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		}
 	}
 
+	/**
+	 * Draws {@code pv_bg}, leaving out its top border under the selected tab. NEU did this with the depth buffer
+	 * (the selected tab was drawn first at a higher z). The selected tab's bottom rows are translucent, so drawing
+	 * it over the border can't hide the line.
+	 */
+	private void drawWindowBackground(GuiGraphicsExtractor graphics) {
+		int pressedIndex = visibleTabs().indexOf(currentPage);
+		if (pressedIndex < 0) {
+			RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop, sizeX, sizeY);
+			return;
+		}
+
+		int border = 4; // the selected tab is 32px tall from guiTop - 28, so it covers the window's top 4 rows
+		int gapStart = Math.min(pressedIndex * 28, sizeX);
+		int gapEnd = Math.min(gapStart + 28, sizeX);
+		float v = border / (float) sizeY;
+		if (gapStart > 0) {
+			RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop, gapStart, border,
+				0, gapStart / (float) sizeX, 0, v);
+		}
+		if (gapEnd < sizeX) {
+			RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft + gapEnd, guiTop, sizeX - gapEnd, border,
+				gapEnd / (float) sizeX, 1, 0, v);
+		}
+		RenderUtils.drawTexturedRect(graphics, pv_bg, guiLeft, guiTop + border, sizeX, sizeY - border, 0, 1, v, 1);
+	}
+
 	private List<ProfileViewerPage> visibleTabs() {
 		List<ProfileViewerPage> tabs = new ArrayList<>();
 		for (ProfileViewerPage p : ProfileViewerPage.values()) {
@@ -402,12 +438,13 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		return tabs;
 	}
 
-	private void renderTabs(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void renderTabs(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean renderPressed) {
 		List<ProfileViewerPage> tabs = visibleTabs();
 		for (int i = 0; i < tabs.size(); i++) {
-			renderTab(graphics, tabs.get(i).stack, i, tabs.get(i) == currentPage);
+			boolean pressed = tabs.get(i) == currentPage;
+			if (pressed == renderPressed) renderTab(graphics, tabs.get(i).stack, i, pressed);
 		}
-		if (currentPage != ProfileViewerPage.LOADING && currentPage != ProfileViewerPage.INVALID_NAME) {
+		if (!renderPressed && currentPage != ProfileViewerPage.LOADING && currentPage != ProfileViewerPage.INVALID_NAME) {
 			for (int i = 0; i < tabs.size(); i++) {
 				int x = guiLeft + i * 28;
 				int y = guiTop - 28;
@@ -433,9 +470,9 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 				uMin = 28 / 256f;
 				uMax = 56 / 256f;
 			}
-			graphics.fill(x + 2, y + 2, x + 28 - 2, y + 28 - 2, 0x80000000);
+			graphics.fill(x + 2, y + 2, x + 28 - 2, y + 28, 0x80000000);
 		} else {
-			graphics.fill(x + 2, y + 4, x + 28 - 2, y + 28 - 4, 0x80000000);
+			graphics.fill(x + 2, y + 4, x + 28 - 2, y + 28, 0x80000000);
 		}
 
 		RenderUtils.drawTexturedRect(graphics, pv_elements, x, y, 28, pressed ? 32 : 31, uMin, uMax, vMin, vMax);
@@ -661,9 +698,9 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	}
 
 	public enum ProfileViewerPage {
-		LOADING(null, null, null),
-		INVALID_NAME(null, null, null),
-		NO_SKYBLOCK(null, null, null),
+		LOADING((Item) null, null, null),
+		INVALID_NAME((Item) null, null, null),
+		NO_SKYBLOCK((Item) null, null, null),
 		BASIC(Items.PAPER, "Your Skills", ChatFormatting.BLUE),
 		DUNGEON(Blocks.DEAD_BUSH.asItem(), "Dungeoneering", ChatFormatting.YELLOW),
 		EXTRA(Items.BOOK, "Profile Stats", ChatFormatting.GRAY),
@@ -673,17 +710,47 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		MINING(Items.IRON_PICKAXE, "Heart of the Mountain", ChatFormatting.DARK_PURPLE),
 		BINGO(Items.FILLED_MAP, "Bingo", ChatFormatting.DARK_RED),
 		TROPHY_FISH(Items.FISHING_ROD, "Trophy Fish", ChatFormatting.DARK_AQUA),
-		BESTIARY(Items.IRON_SWORD, "Bestiary", ChatFormatting.RED);
+		BESTIARY(Items.IRON_SWORD, "Bestiary", ChatFormatting.RED),
+		// Tabs from here down don't exist in NEU; they follow SkyBlockPv's tab set and are placeholders for now.
+		// Portions of this code are from the SkyBlockPv mod.
+		FARMING(Items.WHEAT, "Farming", ChatFormatting.YELLOW),
+		// Fig Log's in-game model is stripped spruce log.
+		FORAGING(Items.STRIPPED_SPRUCE_LOG, "Foraging", ChatFormatting.DARK_GREEN),
+		LOADOUTS(Blocks.BARREL.asItem(), "Loadouts", ChatFormatting.WHITE),
+		MUSEUM(Blocks.GOLD_BLOCK.asItem(), "Museum", ChatFormatting.GOLD),
+		// Skull textures from SkyBlockPv's repo (meowdding-repo, pv/skull_textures.json).
+		CHOCOLATE_FACTORY(
+			Utils.createSkull(
+				"",
+				"e4e1bf9730eb444abb28b18817d43f3e",
+				"ewogICJ0aW1lc3RhbXAiIDogMTcxOTkzOTQxMzQ3NCwKICAicHJvZmlsZUlkIiA6ICJlNGUxYmY5NzMwZWI0NDRhYmIyOGIxODgxN2Q0M2YzZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSU1PR0FNRVMwMzIxIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzlhODE1Mzk4ZTdkYTg5YjFiYzA4ZjY0NmNhZmM4ZTdiODEzZGEwYmUwZWVjMGNjZTZkM2VmZjUyMDc4MDEwMjYiCiAgICB9CiAgfQp9"
+			),
+			"Chocolate Factory",
+			ChatFormatting.GOLD
+		),
+		RIFT(
+			Utils.createSkull(
+				"",
+				"d12b997eb6a4484982f415e2571e6f84",
+				"ewogICJ0aW1lc3RhbXAiIDogMTY4MTkxMjM5OTYxNCwKICAicHJvZmlsZUlkIiA6ICJkMTJiOTk3ZWI2YTQ0ODQ5ODJmNDE1ZTI1NzFlNmY4NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUd2lybGJlbGwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjI2MTkyNjA5ZDZjNDZhZGU3M2U4MDdmYzQwZGJjM2ExYTFhZmJiNDU2YWUxNjU3ODViMGZlODM0ZGQxY2I1NyIKICAgIH0KICB9Cn0="
+			),
+			"Rift",
+			ChatFormatting.DARK_PURPLE
+		);
 
 		public final ItemStack stack;
 		public final String displayName;
 
 		ProfileViewerPage(Item item, String name, ChatFormatting colour) {
-			if (item == null) {
+			this(item == null ? null : new ItemStack(item), name, colour);
+		}
+
+		ProfileViewerPage(ItemStack icon, String name, ChatFormatting colour) {
+			if (icon == null) {
 				stack = null;
 				displayName = null;
 			} else {
-				stack = new ItemStack(item);
+				stack = icon;
 				displayName = name;
 				stack.set(DataComponents.CUSTOM_NAME, Component.literal(name).withStyle(colour));
 			}
