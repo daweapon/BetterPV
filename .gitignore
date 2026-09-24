@@ -26,3 +26,6 @@ run
 infer-out/
 ciwork/
 .DS_STORE
+
+# backend notes, kept local only
+backend/README.md
