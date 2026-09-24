@@ -34,7 +34,13 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
  * regardless of location.
  */
 public class PvCommand {
+	/**
+	 * Registers {@code /pv}, replacing any {@code /pv} another mod registered before it. Brigadier merges commands
+	 * of the same name (the other mod's {@code /pv <player>} would still run), so the old node is removed first.
+	 * Called in a late registration phase (see NotEnoughUpdatesClient).
+	 */
 	public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+		dispatcher.getRoot().getChildren().removeIf(node -> node.getName().equals("pv"));
 		dispatcher.register(
 			ClientCommands.literal("pv")
 				.executes(ctx -> {

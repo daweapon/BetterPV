@@ -2,7 +2,6 @@ package io.github.moulberry.notenoughupdates.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
-import io.github.moulberry.notenoughupdates.commands.BpvCommand;
 import io.github.moulberry.notenoughupdates.commands.profile.CataCommand;
 import io.github.moulberry.notenoughupdates.commands.profile.PeekCommand;
 import io.github.moulberry.notenoughupdates.commands.profile.PvCommand;
@@ -11,6 +10,7 @@ import io.github.moulberry.notenoughupdates.NEUManager;
 import io.github.moulberry.notenoughupdates.util.BpvBackend;
 import net.minecraft.resources.Identifier;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.ProfileKeyPair;
@@ -27,14 +27,19 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
 			ViewProfileCommand.register(dispatcher, "neuprofile");
 			PeekCommand.register(dispatcher);
-			PvCommand.register(dispatcher);
-			BpvCommand.register(dispatcher);
 			// Old code skipped registering /cata when "skyblockextras" was also loaded, to avoid clashing with
 			// that mod's own /cata command.
 			if (!FabricLoader.getInstance().isModLoaded("skyblockextras")) {
 				CataCommand.register(dispatcher);
 			}
 		});
+
+		// /pv is registered in a phase after every other mod's (the default phase, and SkyBlockPv's own late phase,
+		// which takes /pv over from Skyblocker the same way), so Better PV's /pv is the one that runs.
+		Identifier pvPhase = Identifier.fromNamespaceAndPath("notenoughupdates", "pv_command");
+		ClientCommandRegistrationCallback.EVENT.addPhaseOrdering(Event.DEFAULT_PHASE, pvPhase);
+		ClientCommandRegistrationCallback.EVENT.addPhaseOrdering(Identifier.fromNamespaceAndPath("skyblock-pv", "skyblock_pv_command"), pvPhase);
+		ClientCommandRegistrationCallback.EVENT.register(pvPhase, (dispatcher, registryAccess) -> PvCommand.register(dispatcher));
 
 		// Lets BpvBackend prove who the player is, using the Mojang-certified profile key pair vanilla uses for
 		// chat signing. prepareKeyPair() is asked for on the render thread, where vanilla itself calls it.

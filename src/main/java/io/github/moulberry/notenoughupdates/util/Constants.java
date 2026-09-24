@@ -61,6 +61,7 @@ public class Constants {
 	public static JsonObject HOTMLAYOUT;
 	public static JsonObject ATTRIBUTE_SHARDS;
 	public static JsonObject MUSEUM;
+	public static JsonObject HOPPITY;
 
 	private Constants() {
 	}
@@ -88,6 +89,7 @@ public class Constants {
 		HOTMLAYOUT = readConstant(repoLocation, "hotmlayout", gson);
 		ATTRIBUTE_SHARDS = readConstant(repoLocation, "attribute_shards", gson);
 		MUSEUM = readConstant(repoLocation, "museum", gson);
+		HOPPITY = readConstant(repoLocation, "hoppity", gson);
 	}
 
 	private static JsonObject readConstant(File repoLocation, String constant, Gson gson) {

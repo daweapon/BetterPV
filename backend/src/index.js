@@ -37,6 +37,7 @@ const ALLOWED_ENDPOINTS = {
 	"v2/skyblock/bingo": ["uuid", 300],
 	"v2/skyblock/profiles": ["uuid", 180],
 	"v2/skyblock/museum": ["profile", 180],
+	"v2/skyblock/garden": ["profile", 180],
 };
 
 const UUID_PATTERN = /^[0-9a-f]{32}$/;

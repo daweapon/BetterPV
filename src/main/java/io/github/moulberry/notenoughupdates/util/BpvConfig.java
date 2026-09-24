@@ -31,58 +31,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
- * Minimal standalone replacement for the API-key portion of the Forge 1.8.9 {@code NEUConfig} (the full
- * annotation-driven config-GUI framework is explicitly out of scope for this port - see {@link ApiUtil} class
- * javadoc). Reads/writes a single {@code apiKey} field from {@code <config-dir>/notenoughupdates/config.json}
- * via Gson, consistent with how {@link Constants}/the repo files already live under the mod's config dir.
- *
- * <p>API mapping/behaviour note: as of the current Hypixel API (see {@link ApiUtil#newHypixelApiRequest}), this
- * is a <b>developer-registered</b> key from https://developer.hypixel.net/dashboard (a "Personal API Key"), sent
- * as an {@code Api-Key} request header - not the old per-player key obtained in-game via {@code /api new}, which
- * Hypixel removed years before this port. Most of the endpoints this mod actually calls
- * ({@code player}/{@code status}/{@code guild}/{@code skyblock/profiles}/{@code skyblock/bingo}) require a key;
- * when the player hasn't set one, those go through the Better PV backend instead (see {@link BpvBackend}).
- * {@code resources/*} and {@code skyblock/bazaar} are public and work fine with no key at all.
- *
- * <p>No in-game config GUI is provided (out of scope, same as full {@code NEUConfig}) - the user edits
- * {@code config.json} directly. A commented-out placeholder file is written on first run so the location is
- * discoverable.
+ * Better PV's small config file, {@code <config-dir>/notenoughupdates/config.json}, read with Gson. It only holds
+ * {@code backendUrl}, an optional override for the Better PV backend (see {@link BpvBackend}); leave it empty to
+ * use the default. The mod has no API key setting: Hypixel keys stay on the backend (see
+ * {@link ApiUtil#newHypixelApiRequest}). Older files may still have an {@code apiKey} field, which is ignored.
  */
-public class ApiKeyConfig {
+public class BpvConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static Data cached;
 
 	private static class Data {
-		String apiKey = "";
 		String backendUrl = "";
-	}
-
-	/**
-	 * @return the player's own Hypixel developer API key, or {@code ""} if none is set. Optional: without one,
-	 * requests go through the Better PV backend (see {@link BpvBackend}).
-	 */
-	public static synchronized String getApiKey() {
-		if (cached == null) load();
-		return cached.apiKey == null ? "" : cached.apiKey;
 	}
 
 	/** @return an override for the Better PV backend URL, or {@code ""} to use {@link BpvBackend#DEFAULT_BACKEND_URL}. */
 	public static synchronized String getBackendUrl() {
 		if (cached == null) load();
 		return cached.backendUrl == null ? "" : cached.backendUrl.trim();
-	}
-
-	/** Sets and persists the Hypixel developer API key (used by {@code /bpv setapi} and the {@code ApiKeyScreen} GUI). */
-	public static synchronized void setApiKey(String apiKey) {
-		if (cached == null) load();
-		cached.apiKey = apiKey;
-		File file = configFile();
-		try {
-			file.getParentFile().mkdirs();
-			Files.writeString(file.toPath(), GSON.toJson(cached), StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			NotEnoughUpdates.LOGGER.warn("Failed to write {}: {}", file, e.toString());
-		}
 	}
 
 	private static File configFile() {

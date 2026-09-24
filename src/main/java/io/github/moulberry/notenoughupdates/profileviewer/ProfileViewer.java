@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.github.moulberry.notenoughupdates.NEUManager;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
+import io.github.moulberry.notenoughupdates.util.ApiBackoff;
 import io.github.moulberry.notenoughupdates.util.Constants;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
@@ -46,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -616,6 +618,8 @@ public class ProfileViewer {
 	}
 
 	public void getProfileByName(String name, Consumer<Profile> callback) {
+		// The player is opening a profile: let key-protected requests try again if an API key error stopped them.
+		ApiBackoff.reset();
 		String nameF = name.toLowerCase();
 
 		if (nameToUuid.containsKey(nameF) && nameToUuid.get(nameF) == null) {
@@ -683,6 +687,9 @@ public class ProfileViewer {
 		/** Museum member data by profile name; an empty object once it's known there is none (see getMuseumInfo). */
 		private final Map<String, JsonObject> museumInfoMap = new ConcurrentHashMap<>();
 		private final Set<String> museumRequested = ConcurrentHashMap.newKeySet();
+		/** Garden data by profile name (see getGardenInfo). */
+		private final Map<String, JsonObject> gardenInfoMap = new ConcurrentHashMap<>();
+		private final Set<String> gardenRequested = ConcurrentHashMap.newKeySet();
 		private final Pattern COLL_TIER_PATTERN = Pattern.compile("_(-?\\d+)");
 		private String latestProfile = null;
 		private JsonArray skyblockProfiles = null;
@@ -777,6 +784,39 @@ public class ProfileViewer {
 					JsonObject info = member instanceof JsonObject object ? object : new JsonObject();
 					if (!success) info.addProperty("__error", true);
 					museumInfoMap.put(name, info);
+					return null;
+				});
+			return null;
+		}
+
+		/**
+		 * The profile's garden ({@code garden} of {@code v2/skyblock/garden}): plots, visitors, crop milestones and
+		 * upgrades, composter. Null while loading; an empty object if the profile has no garden, or {@code __error}
+		 * (with Hypixel's {@code __cause}, if any) if the request failed. Requested once per profile.
+		 */
+		public JsonObject getGardenInfo(String profileName) {
+			if (profileName == null) profileName = latestProfile;
+			if (profileName == null) return null;
+			JsonObject cached = gardenInfoMap.get(profileName);
+			if (cached != null) return cached;
+			String profileId = getProfileIdFor(profileName);
+			if (profileId == null || !gardenRequested.add(profileName)) return null;
+
+			String name = profileName;
+			manager.apiUtils
+				.newHypixelApiRequest("v2/skyblock/garden")
+				.queryArgument("profile", profileId)
+				.requestJson()
+				.handle((jsonObject, ex) -> {
+					boolean success = jsonObject != null && jsonObject.has("success") && jsonObject.get("success").getAsBoolean();
+					JsonObject info = success && jsonObject.get("garden") instanceof JsonObject garden ? garden : new JsonObject();
+					// Hypixel answers "No garden data" with success false for a profile that never unlocked it.
+					String cause = jsonObject == null ? null : Utils.getElementAsString(jsonObject.get("cause"), null);
+					if (!success && (cause == null || !cause.toLowerCase(Locale.ROOT).contains("no garden"))) {
+						info.addProperty("__error", true);
+						if (cause != null) info.addProperty("__cause", cause);
+					}
+					gardenInfoMap.put(name, info);
 					return null;
 				});
 			return null;
@@ -1145,6 +1185,17 @@ public class ProfileViewer {
 			inventoryCacheMap.clear();
 			collectionInfoMap.clear();
 			networth.clear();
+			// Museum and garden are kept once loaded, but a failed load is asked for again.
+			museumInfoMap.entrySet().removeIf(entry -> {
+				boolean failed = entry.getValue().has("__error");
+				if (failed) museumRequested.remove(entry.getKey());
+				return failed;
+			});
+			gardenInfoMap.entrySet().removeIf(entry -> {
+				boolean failed = entry.getValue().has("__error");
+				if (failed) gardenRequested.remove(entry.getKey());
+				return failed;
+			});
 		}
 
 		public int getCap(JsonObject leveling, String skillName) {

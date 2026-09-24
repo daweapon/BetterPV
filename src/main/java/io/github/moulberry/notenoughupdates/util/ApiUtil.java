@@ -50,12 +50,10 @@ import java.util.zip.GZIPInputStream;
  *   <li>The original pinned Hypixel's TLS certificate via a bundled {@code neukeystore.jks} keystore resource.
  *   That resource doesn't exist in this project and cert pinning is an orthogonal hardening concern, so this
  *   port uses the platform default trust store. TODO(fabric-port): re-add certificate pinning here if desired.</li>
- *   <li>The API key: the full {@code NEUConfig} config-GUI system is out of scope for this pass (see class
- *   javadoc elsewhere), so the key is read from a small standalone {@link ApiKeyConfig} JSON file instead. Also
- *   note the key itself changed meaning - Hypixel removed the old per-player {@code /api new} key years before
- *   this port in favor of developer-registered keys from https://developer.hypixel.net, sent as an
- *   {@code Api-Key} header (not the old {@code ?key=} query parameter). A personal key is now optional: by
- *   default key-protected requests go through the Better PV backend. See {@link #newHypixelApiRequest}.</li>
+ *   <li>The API key: the original read the player's own key from {@code NEUConfig}. Hypixel removed the old
+ *   per-player {@code /api new} key years before this port, and its developer keys may not be shared with or
+ *   entered into client mods, so the mod has no key at all: key-protected requests go through the Better PV
+ *   backend, which holds the key server-side. See {@link #newHypixelApiRequest}.</li>
  *   <li>{@code moulberryCodesApi} (the moulberry.codes host override) came from the config system too and is
  *   still hardcoded - see {@link #getMyApiURL()}.</li>
  * </ul>
@@ -75,6 +73,7 @@ public class ApiUtil {
 		private String baseUrl = null;
 		private boolean shouldGunzip = false;
 		private boolean backendAuth = false;
+		private boolean keyed = false;
 		private String method = "GET";
 
 		public Request header(String key, String value) {
@@ -102,6 +101,12 @@ public class ApiUtil {
 			return this;
 		}
 
+		/** Uses the backend's Hypixel API key: held back by, and reported to, {@link ApiBackoff}. */
+		public Request keyed() {
+			keyed = true;
+			return this;
+		}
+
 		/** Attach a Better PV backend token (see {@link BpvBackend}), re-authenticating once if it's rejected. */
 		public Request backendAuth() {
 			backendAuth = true;
@@ -123,6 +128,10 @@ public class ApiUtil {
 
 		public CompletableFuture<String> requestString() {
 			return CompletableFuture.supplyAsync(() -> {
+				if (keyed) {
+					String blocked = ApiBackoff.blockedReason();
+					if (blocked != null) return error(blocked);
+				}
 				try {
 					HttpResponse<byte[]> response = send();
 					if (backendAuth && response.statusCode() == 401) {
@@ -136,15 +145,14 @@ public class ApiUtil {
 							body = gzipIn.readAllBytes();
 						}
 					}
-					return new String(body, StandardCharsets.UTF_8);
+					String text = new String(body, StandardCharsets.UTF_8);
+					if (keyed) recordAnswer(response.statusCode(), text);
+					return text;
 				} catch (BackendAuthException e) {
 					// Answer with a Hypixel-style error body rather than failing the future, so callers take their
 					// normal "success: false" path instead of never hearing back.
 					NotEnoughUpdates.LOGGER.warn("Better PV backend login failed: {}", e.getMessage());
-					JsonObject error = new JsonObject();
-					error.addProperty("success", false);
-					error.addProperty("cause", e.getMessage());
-					return error.toString();
+					return error(e.getMessage());
 				} catch (IOException e) {
 					throw new UncheckedIOException(e);
 				} catch (InterruptedException e) {
@@ -152,6 +160,28 @@ public class ApiUtil {
 					throw new RuntimeException(e);
 				}
 			}, executorService);
+		}
+
+		private static String error(String cause) {
+			JsonObject error = new JsonObject();
+			error.addProperty("success", false);
+			error.addProperty("cause", cause);
+			return error.toString();
+		}
+
+		private static void recordAnswer(int status, String body) {
+			boolean success = false;
+			String cause = null;
+			try {
+				JsonObject json = gson.fromJson(body, JsonObject.class);
+				if (json != null) {
+					success = json.has("success") && json.get("success").getAsBoolean();
+					if (json.has("cause") && json.get("cause").isJsonPrimitive()) cause = json.get("cause").getAsString();
+				}
+			} catch (RuntimeException e) {
+				// Not JSON (e.g. a proxy error page): only the status says anything.
+			}
+			ApiBackoff.record(status, success && status == 200, cause);
 		}
 
 		private HttpResponse<byte[]> send() throws IOException, InterruptedException {
@@ -196,19 +226,15 @@ public class ApiUtil {
 
 	/**
 	 * A Hypixel API request for an endpoint that needs authentication (e.g. {@code player}, {@code status},
-	 * {@code guild}, {@code skyblock/profiles}, {@code skyblock/bingo}). If the player configured their own
-	 * developer key (see {@link ApiKeyConfig}), it goes straight to Hypixel with that key as an {@code Api-Key}
-	 * header. Otherwise it goes through the Better PV backend (see {@link BpvBackend}), which holds the key
-	 * server-side - Hypixel doesn't allow keys to be shipped inside a client mod.
+	 * {@code guild}, {@code skyblock/profiles}, {@code skyblock/bingo}). It goes through the Better PV backend
+	 * (see {@link BpvBackend}), which holds the key server-side: Hypixel doesn't allow keys to be shipped inside
+	 * or entered into a client mod, so the mod never handles one.
 	 */
 	public Request newHypixelApiRequest(String apiPath) {
-		String key = apiKey();
-		if (!key.isEmpty()) {
-			return newAnonymousHypixelApiRequest(apiPath).header("Api-Key", key);
-		}
 		return new Request()
 			.url(BpvBackend.baseUrl() + "hypixel/" + apiPath)
-			.backendAuth();
+			.backendAuth()
+			.keyed();
 	}
 
 	/**
@@ -223,10 +249,6 @@ public class ApiUtil {
 	public Request newMoulberryRequest(String path) {
 		return new Request()
 			.url(getMyApiURL() + path);
-	}
-
-	private String apiKey() {
-		return ApiKeyConfig.getApiKey();
 	}
 
 	// TODO(fabric-port): likewise, the moulberry.codes-compatible API host was config-driven.

@@ -64,7 +64,7 @@ public class BpvBackend {
 	}
 
 	public static String baseUrl() {
-		String url = ApiKeyConfig.getBackendUrl();
+		String url = BpvConfig.getBackendUrl();
 		if (url.isEmpty()) url = DEFAULT_BACKEND_URL;
 		return url.endsWith("/") ? url : url + "/";
 	}
