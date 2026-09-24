@@ -32,7 +32,7 @@ Hypixel doesn't allow API keys to be built into client mods, so the key lives on
 ## Credits
 
 - **NotEnoughUpdates.** Better PV is a port of the Profile Viewer from [NotEnoughUpdates](https://github.com/NotEnoughUpdates/NotEnoughUpdates), created by Moulberry and developed by the [NotEnoughUpdates contributors](https://github.com/NotEnoughUpdates/NotEnoughUpdates/graphs/contributors) for Forge 1.8.9. Most of the profile viewer's logic, layouts and textures are their work. Better PV brings it to modern Fabric, adapts it to Hypixel's current API and SkyBlock updates, and leaves out NEU's other features. It also uses NEU's community-maintained [item repo](https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO) for item, pet, bestiary and HOTM data. Their original copyright notices are kept in every ported source file.
-- **SkyBlockPv.** Portions of this code are from the [SkyBlockPv](https://github.com/meowdding/skyblock-pv) mod: the Heart of the Mountain page's powder calculation, Rock pet brackets, and crystal and Glacite details; the Loadouts tab; and the Heart of the Mountain / Heart of the Forest tree layouts in `skill_trees.json`, taken from [meowdding-repo](https://github.com/meowdding/meowdding-repo) (MIT).
+- **SkyBlockPv.** Portions of this code are from the [SkyBlockPv](https://github.com/meowdding/skyblock-pv) mod.
 
 ## License
 
