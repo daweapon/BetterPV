@@ -1,0 +1,7 @@
+name = "betterpv-api"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Secrets (not stored in this file):
+#   wrangler secret put HYPIXEL_API_KEY
+#   wrangler secret put TOKEN_SECRET
