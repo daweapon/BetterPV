@@ -24,32 +24,27 @@ package io.github.moulberry.notenoughupdates.profileviewer.farming;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewerPage;
 import io.github.moulberry.notenoughupdates.profileviewer.PvData;
 import io.github.moulberry.notenoughupdates.profileviewer.PvUi;
-import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * "Crops" sub-page of the farming tab, as SkyBlockPv's {@code CropScreen}: a column per crop with the player's best
- * farming tool for it, its crop upgrade level (paid with copper) and its garden crop milestone.
+ * crop upgrade level (paid with copper) and its garden crop milestone.
  */
 public class CropsPage implements GuiProfileViewerPage {
 
 	private static final int GAP = 4;
 
 	private final GuiProfileViewer instance;
-	private final Map<JsonObject, ItemStack> stacks = new IdentityHashMap<>();
 	private final ItemStack upgradeIcon = new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
 	private final ItemStack maxedUpgradeIcon = new ItemStack(Items.NETHERRACK);
 
@@ -64,7 +59,6 @@ public class CropsPage implements GuiProfileViewerPage {
 
 	@Override
 	public void resetCache() {
-		stacks.clear();
 	}
 
 	@Override
@@ -76,19 +70,9 @@ public class CropsPage implements GuiProfileViewerPage {
 			PvUi.centred(graphics, font, instance, status);
 			return;
 		}
-		JsonObject inventoryInfo = GuiProfileViewer.getProfile().getInventoryInfo(GuiProfileViewer.getProfileId());
-		if (inventoryInfo == null) return;
-		List<JsonObject> items = new ArrayList<>();
-		for (Map.Entry<String, JsonElement> inventory : inventoryInfo.entrySet()) {
-			if (inventory.getKey().equals("backpack_sizes") || !(inventory.getValue() instanceof JsonArray array)) continue;
-			for (JsonElement element : array) {
-				if (element instanceof JsonObject item) items.add(item);
-			}
-		}
-
 		int count = Garden.CROPS.size();
 		int width = count * 18 + (count - 1) * GAP;
-		int height = PvUi.TITLE + 3 + 18 * 3;
+		int height = PvUi.TITLE + 3 + 18 * 2;
 		int left = GuiProfileViewer.getGuiLeft() + (instance.sizeX - width) / 2;
 		int top = GuiProfileViewer.getGuiTop() + (instance.sizeY - height) / 2;
 		PvUi.title(graphics, font, "Crops", left, top, width);
@@ -96,33 +80,8 @@ public class CropsPage implements GuiProfileViewerPage {
 		for (int i = 0; i < count; i++) {
 			Garden.Crop crop = Garden.CROPS.get(i);
 			int x = left + i * (18 + GAP);
-			drawTool(graphics, crop, items, x, top, mouseX, mouseY);
-			drawUpgrade(graphics, font, crop, garden, x, top + 18, mouseX, mouseY);
-			drawMilestone(graphics, font, crop, garden, x, top + 36, mouseX, mouseY);
-		}
-	}
-
-	private void drawTool(GuiGraphicsExtractor graphics, Garden.Crop crop, List<JsonObject> items, int x, int y, int mouseX, int mouseY) {
-		JsonElement info = Garden.repo("tools." + crop.key());
-		List<String> ids = new ArrayList<>();
-		String toolName = crop.name() + " Tool";
-		if (info instanceof JsonObject tool) {
-			if (tool.get("id") instanceof JsonArray array) for (JsonElement id : array) ids.add(id.getAsString());
-			toolName = PvData.tags(Utils.getElementAsString(tool.get("displayname"), toolName));
-		}
-		// The highest tier the player owns (tiers are listed worst to best).
-		JsonObject best = null;
-		int bestTier = -1;
-		for (JsonObject item : items) {
-			int tier = ids.indexOf(Utils.getElementAsString(item.get("internalname"), ""));
-			if (tier > bestTier) {
-				best = item;
-				bestTier = tier;
-			}
-		}
-		ItemStack stack = best == null ? null : stacks.computeIfAbsent(best, json -> NotEnoughUpdates.INSTANCE.manager.jsonToStack(json, false));
-		if (PvUi.slot(graphics, stack, x, y, mouseX, mouseY)) {
-			instance.tooltipToDisplay = best != null ? PvUi.itemTooltip(best) : List.of("§7" + toolName, "§cNot owned!");
+			drawUpgrade(graphics, font, crop, garden, x, top, mouseX, mouseY);
+			drawMilestone(graphics, font, crop, garden, x, top + 18, mouseX, mouseY);
 		}
 	}
 
