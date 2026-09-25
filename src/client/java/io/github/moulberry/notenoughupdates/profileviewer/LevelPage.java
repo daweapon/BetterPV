@@ -48,18 +48,12 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Port of NEU's level-breakdown page ({@code profileviewer.level.LevelPage} and its eight {@code *TaskLevel}
- * classes): the SkyBlock level bar plus how much of each category's SkyBlock XP the player has earned. The eight task
- * classes are folded into one class that reads the profile JSON directly (there is no {@code APIDataJson} in this
- * port).
+ * The SkyBlock level breakdown page: the level bar and how much of each category's XP the player has.
  *
- * <p>Where NEU worked each source out from profile fields (and where its numbers have gone stale), most sources here
- * are read from the profile's {@code leveling.completed_tasks} list against {@code profile_viewer/sblevel_tasks.json}:
- * task id to SkyBlock XP, compiled from the Hypixel wiki's SkyBlock Levels tables via the community dataset
- * github.com/8Doc/SkyblockXP-BAZALRIGHT- (task ids checked against live profiles). Skills, collections, minions, the
- * Museum, attributes, HOTM/HOTF and the other formula-based sources are still worked out from profile data. The main
- * bar's tooltip says how much of the profile's real SkyBlock XP the categories account for, so a source that isn't
- * tracked yet shows up as a gap rather than a wrong number.
+ * Most sources are read from {@code leveling.completed_tasks} against {@code sblevel_tasks.json}, compiled from
+ * the community dataset github.com/8Doc/SkyblockXP-BAZALRIGHT-. Skills, collections, minions, the museum,
+ * attributes and HOTM/HOTF are worked out from profile data. The main bar's tooltip shows how much of the real
+ * XP the categories cover, so an untracked source shows up as a gap.
  */
 public class LevelPage implements GuiProfileViewerPage {
 
@@ -283,9 +277,7 @@ public class LevelPage implements GuiProfileViewerPage {
 		RenderUtils.drawItemStack(graphics, itemStack, x + 8, y + 7);
 	}
 
-	// ---------------------------------------------------------------------------------------------------------
 	// Category maths
-	// ---------------------------------------------------------------------------------------------------------
 
 	private List<Task> computeTasks(
 		ProfileViewer.Profile profile, String profileId, JsonObject member, JsonObject museum, JsonObject garden
@@ -423,10 +415,7 @@ public class LevelPage implements GuiProfileViewerPage {
 		return level;
 	}
 
-	/**
-	 * Highest tier per name from either a {name: tier} object or a list of "NAME_TIER" strings (as
-	 * {@code unlocked_coll_tiers} and {@code crafted_generators} are stored).
-	 */
+	/** Highest tier per name from a {name: tier} object or a list of "NAME_TIER" strings. */
 	private static Map<String, Integer> tiersOf(JsonElement source) {
 		Map<String, Integer> tiers = new LinkedHashMap<>();
 		if (source == null) return tiers;
@@ -764,10 +753,7 @@ public class LevelPage implements GuiProfileViewerPage {
 		lines.add("Greenhouse Upgrades", Math.min(greenhouse, 20) * 5, 100);
 	}
 
-	/**
-	 * Total powder of one type ever earned, whichever way the profile stores it: as the total, or as what's left plus
-	 * what was spent.
-	 */
+	/** Total powder of one type ever earned, stored either as the total or as what's left plus what was spent. */
 	private static double powderTotal(JsonObject member, String type) {
 		JsonObject core = objectAt(member, "mining_core");
 		if (core == null) return 0;
@@ -956,14 +942,9 @@ public class LevelPage implements GuiProfileViewerPage {
 		return found;
 	}
 
-	// ---------------------------------------------------------------------------------------------------------
 	// Helpers
-	// ---------------------------------------------------------------------------------------------------------
 
-	/**
-	 * A line for a group of tasks in {@code sblevel_tasks.json}: the XP of those the player has completed, out of the
-	 * XP of all of them.
-	 */
+	/** A line for a group of tasks in {@code sblevel_tasks.json}: XP of the completed ones out of the total. */
 	private static void addGroup(Lines lines, String name, String group, Set<String> completed, Predicate<String> filter) {
 		JsonObject tasks = PvData.bundled("sblevel_tasks").getAsJsonObject(group);
 		if (tasks == null) return;

@@ -37,9 +37,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * "Hoppity's Collection" sub-page of the chocolate factory tab, laid out like the foraging tab's attributes: every
- * rabbit grouped by rarity with a search box and a filter. Found rabbits show their rarity's head, missing ones
- * gray dye; the tooltip has how often it was found, where, and what it adds to the factory.
+ * Hoppity's Collection sub-page: rabbits grouped by rarity with a search box and filter. Found ones show the
+ * rarity's head, missing ones gray dye. The tooltip has how often and where it was found.
  */
 public class RabbitsPage extends GroupedGridPage<RabbitsPage.Entry> {
 

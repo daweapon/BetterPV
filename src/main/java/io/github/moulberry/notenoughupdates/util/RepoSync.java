@@ -42,28 +42,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Port of the repo download/extract half of the Forge 1.8.9 {@code NEUManager#fetchRepository}/
- * {@code unzipIgnoreFirstFolder} pipeline (the GitHub-zip-archive sync for
- * https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO), rewritten on {@code java.net.http.HttpClient} to
- * match {@link ApiUtil}'s established HTTP approach.
+ * Downloads and extracts the NEU item repo zip
+ * (https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO), on {@code java.net.http.HttpClient}.
  *
- * <p>TODO(fabric-port) — simplifications vs. the original:
- * <ul>
- *   <li>The original checked the GitHub "latest commit" API on every launch and diffed it against a saved
- *   {@code currentCommit.json} to decide whether to redownload, so it would pick up upstream repo updates on
- *   every launch (when {@code autoupdate} was enabled - a config-system option out of scope here anyway). This
- *   port instead does a much simpler "sync if missing or stale" check: it skips the download entirely if
- *   {@code <repoLocation>/items} already exists and a {@code .last-synced} marker file is younger than {@link
- *   #MAX_AGE}. This means an already-synced repo will only refresh itself roughly once a day at most, not on
- *   every commit to the upstream repo - acceptable for this pass since the alternative (hitting the GitHub API
- *   on every launch) has more failure modes for no benefit to a first-run/"populate an empty config dir" use
- *   case.</li>
- *   <li>No progress reporting/chat message on completion ({@code userFacingRepositoryReload}'s
- *   "§aRepository reloaded." messages) - this is a headless best-effort background sync, not a user-triggered
- *   command yet. A {@code /neu reloadrepo}-equivalent command wasn't ported either.</li>
- *   <li>Corrupt-zip / zip-slip path traversal validation is kept (same check the original had) since it's cheap
- *   and a real security property, not a nuance being simplified away.</li>
- * </ul>
+ * Simpler than the Forge original: instead of checking the latest GitHub commit on every launch, it skips
+ * the download if {@code <repoLocation>/items} exists and a {@code .last-synced} marker is younger than
+ * {@link #MAX_AGE}. There's no chat message when it finishes and no reload command. The zip-slip check is
+ * kept.
  */
 public class RepoSync {
 	private static final String REPO_USER = "NotEnoughUpdates";
@@ -88,9 +73,8 @@ public class RepoSync {
 
 	/**
 	 * Downloads and extracts the repo zip into {@code repoLocation} if it's missing or stale, on a background
-	 * thread. Completes with {@code true} if a (re)download happened, {@code false} if the existing local repo
-	 * was left alone (already fresh, or the download failed - failures are logged but not thrown, matching
-	 * {@code Constants}' existing "best effort, null-check the fields" contract).
+	 * thread. Completes with true if it downloaded, false if it left the local repo alone (fresh, or the download
+	 * failed, which is logged but not thrown).
 	 */
 	public static CompletableFuture<Boolean> syncIfNeeded(File repoLocation) {
 		return CompletableFuture.supplyAsync(() -> {
@@ -156,9 +140,8 @@ public class RepoSync {
 	}
 
 	/**
-	 * Port of the original's {@code unzipIgnoreFirstFolder}: GitHub's archive zips wrap everything in a single
-	 * {@code <repo>-<branch>/} top-level folder, which is stripped here so the repo's real top-level dirs
-	 * ({@code items/}, {@code constants/}, ...) land directly under {@code destDir}.
+	 * GitHub archive zips wrap everything in one {@code <repo>-<branch>/} folder. This strips it so
+	 * {@code items/}, {@code constants/} etc. land directly under {@code destDir}.
 	 */
 	private static void unzipIgnoreFirstFolder(byte[] zipBytes, File destDir) throws IOException {
 		try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {

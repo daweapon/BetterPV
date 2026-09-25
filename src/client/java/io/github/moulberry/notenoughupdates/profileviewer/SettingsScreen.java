@@ -39,11 +39,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Better PV's settings screen ({@code /bpv}, or the Settings button under the profile viewer), laid out like the
- * old NotEnoughUpdates config menu: dark floating panels, a category list on the left and a scrolling list of option
- * cards on the right, with NEU's animated toggle switches (textures copied from NEU). Every option is written to
- * {@link BpvConfig} the moment it is changed. Tabs that are switched off are only hidden: their pages still load,
- * since other pages (the Level page, for one) read their data.
+ * The settings screen ({@code /bpv} or the Settings button), styled like the old NEU config menu: a category
+ * list on the left, option cards on the right, NEU's toggle switches. Options are saved to {@link BpvConfig}
+ * as soon as they change. Hidden tabs still load, since other pages (Level) read their data.
  */
 public class SettingsScreen extends Screen {
 	private static final int CARD_HEIGHT = 45;

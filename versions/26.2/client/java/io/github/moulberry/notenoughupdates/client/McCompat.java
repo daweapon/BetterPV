@@ -5,8 +5,8 @@ import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * The few Minecraft calls that differ between game versions. There is one copy of this class per version, in
- * {@code versions/<minecraft version>/client/java}, and the build only compiles the copy for the version it targets.
+ * The few Minecraft calls that differ between game versions. Each version has its own copy under
+ * {@code versions/<minecraft version>/client/java}; the build compiles the one it targets.
  */
 public final class McCompat {
 	private McCompat() {

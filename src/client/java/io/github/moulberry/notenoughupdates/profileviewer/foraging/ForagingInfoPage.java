@@ -36,9 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main sub-page of the foraging tab, as SkyBlockPv's {@code MainForagingScreen}: HotF tier, Mangrove / Fig / Helix
- * tree gifts, forest and desert whispers, and the Agatha / Miria personal best and fortune perks. Caps come from
- * SkyBlockPv's repo ({@code pv/foraging}).
+ * Main foraging sub-page: HotF tier, tree gifts, whispers and the Agatha / Miria perks. Caps come from
+ * SkyBlockPv's repo.
  */
 public class ForagingInfoPage implements GuiProfileViewerPage {
 

@@ -22,13 +22,8 @@ package io.github.moulberry.notenoughupdates.util;
 import net.minecraft.ChatFormatting;
 
 /**
- * Trimmed port of the Forge 1.8.9 {@code util.PetData}: only the {@link Rarity} enum is ported, since it's the
- * only part {@code PlayerStats}/{@code ProfileViewer}'s pet-levelling logic (formerly
- * {@code GuiProfileViewer.getPetLevel}) actually needs. The rest of the original class dealt with pet tooltip
- * regexes used by GUI code, which is out of scope for this pass.
- *
- * API mapping note: old {@code net.minecraft.util.EnumChatFormatting} -> new {@code net.minecraft.ChatFormatting}
- * (same constant names).
+ * Trimmed port of {@code util.PetData}: only the {@link Rarity} enum, which is all the pet levelling logic in
+ * {@code PlayerStats}/{@code ProfileViewer} needs.
  */
 public class PetData {
 	public enum Rarity {

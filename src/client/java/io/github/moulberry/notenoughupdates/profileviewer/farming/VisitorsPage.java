@@ -39,9 +39,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * "Visitors" sub-page of the farming tab, as SkyBlockPv's {@code VisitorScreen}: every garden visitor grouped by
- * rarity, with how often each visited and how many offers were accepted. Visitors come from SkyBlockPv's repo
- * ({@code garden.json} visitors); the counts are the garden's {@code commission_data}.
+ * The visitors sub-page: every garden visitor by rarity with visit and accepted-offer counts (from
+ * {@code garden.json} and the garden's {@code commission_data}).
  */
 public class VisitorsPage extends GroupedGridPage<VisitorsPage.Visitor> {
 

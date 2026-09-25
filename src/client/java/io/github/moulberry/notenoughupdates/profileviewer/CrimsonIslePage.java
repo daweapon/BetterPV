@@ -37,8 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Port of NEU's {@code CrimsonIslePage}: Kuudra completions, Dojo results, the last Matriarch attempt and faction
- * reputation. It is the third page of the Basic tab, opened from the button under Level ({@link BasicPage}).
+ * Kuudra completions, Dojo results, the last Matriarch attempt and faction reputation. Third page of the Basic
+ * tab, opened from the button under Level.
  */
 public class CrimsonIslePage implements GuiProfileViewerPage {
 

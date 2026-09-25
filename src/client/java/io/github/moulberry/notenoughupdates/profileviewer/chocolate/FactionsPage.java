@@ -43,9 +43,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * "Factions" sub-page of the chocolate factory tab, as SkyBlockPv's {@code FactionCfScreen}: the rabbits of each of
- * the four factions by rarity, the rarity's rabbit head when found and gray dye when not. The player's faction is shown in green with its
- * level.
+ * The factions sub-page: each faction's rabbits by rarity, the rarity's head when found and gray dye when not.
+ * The player's faction is green, with its level.
  */
 public class FactionsPage implements GuiProfileViewerPage {
 

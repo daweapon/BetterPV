@@ -25,10 +25,7 @@ import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
-/**
- * Port of the Forge 1.8.9 {@code commands.profile.CataCommand} ({@code /cata [player]}), a shortcut that opens
- * the profile viewer straight to the Dungeoneering tab.
- */
+/** {@code /cata [player]}: opens the viewer on the Dungeoneering tab. */
 public class CataCommand {
 	public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
 		dispatcher.register(

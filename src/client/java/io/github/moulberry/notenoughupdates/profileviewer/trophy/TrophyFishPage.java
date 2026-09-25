@@ -46,21 +46,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-/**
- * Port of the Forge 1.8.9 {@code trophy.TrophyFishPage} ("Trophy Fish" tab). {@link TrophyFish} (the data model)
- * was already ported in the prior data-layer pass; this is the rendering/layout port.
- *
- * <p>TODO(fabric-port) — intentionally simplified vs. the original:
- * <ul>
- *   <li>Per-fish item icons (bronze-trophy skull textures), the "not discovered" icon substitute, and the
- *   tier-reward helmet icons (hunter helmets) are all rendered via {@code NEUManager#jsonToStack} against their
- *   repo entries (falling back to no icon, just the rarity-tinted background square, if the repo hasn't been
- *   synced or doesn't have that entry).</li>
- *   <li>The rarity-color tint on each fish's background square (originally a {@code GlStateManager.color} tint
- *   applied to the {@code pv_elements} slot-background texture) is simplified to a flat-filled colored rect,
- *   since the modern render-state API doesn't expose an equivalent simple texture tint helper here.</li>
- * </ul>
- */
+/** The Trophy Fish tab. Fish icons come from the repo (or bundled textures); rarity tints are flat fills. */
 public class TrophyFishPage implements GuiProfileViewerPage {
 
 	private static final Identifier TROPHY_FISH_TEXTURE = Identifier.parse("betterpv:pv_trophy_fish_tab.png");
@@ -128,10 +114,8 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 	private final Map<String, TrophyFish> trophyFishList = new HashMap<>();
 	private long totalCount = 0;
 	/**
-	 * Caches icons resolved via {@code NEUManager#jsonToStack} in {@link #repoIconOrNull}, keyed by repo
-	 * internalname. Without this, every fish/helmet icon would be re-resolved (a fresh {@code ItemStack}/
-	 * {@code GameProfile} via {@code .copy()} on every cache hit) on every single frame - see the identical fix
-	 * and rationale in {@code InventoriesPage#resolvedIconCache}.
+	 * Icons from {@link #repoIconOrNull} by repo internalname. Cached because resolving copies the ItemStack
+	 * every call (see {@code InventoriesPage#resolvedIconCache}).
 	 */
 	private final Map<String, ItemStack> iconCache = new HashMap<>();
 	private final Map<String, Identifier> textureCache = new HashMap<>();
@@ -513,10 +497,9 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * Draws a trophy fish's icon for the highest tier caught ({@code <FISH>_DIAMOND} down to {@code <FISH>_BRONZE});
-	 * undiscovered fish (null map) show the bronze icon. The bundled texture is blitted directly so that mods which
-	 * retexture or hide SkyBlock items (they only touch item rendering) cannot blank it; the item stack is only a
-	 * fallback for fish that have no bundled texture.
+	 * Draws a trophy fish's icon for the highest tier caught (undiscovered shows bronze). The bundled texture is
+	 * blitted directly so mods that retexture or hide SkyBlock items can't blank it; an item stack is only the
+	 * fallback for fish with no bundled texture.
 	 */
 	private void drawFishIcon(
 		GuiGraphicsExtractor graphics,

@@ -37,8 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * "Crops" sub-page of the farming tab, as SkyBlockPv's {@code CropScreen}: a column per crop with the player's best
- * crop upgrade level (paid with copper) and its garden crop milestone.
+ * The crops sub-page: a column per crop with its best upgrade level (paid in copper) and garden milestone.
  */
 public class CropsPage implements GuiProfileViewerPage {
 

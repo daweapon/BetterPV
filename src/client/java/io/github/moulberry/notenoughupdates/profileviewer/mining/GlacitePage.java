@@ -41,9 +41,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * "Glacite Tunnels" sub-page of the mining tab: mineshafts and fossil dust, the eight fossils (donated, and whether
- * their pet is in the pet menu), and corpses looted with the corpse milestone. Fossil pets and the corpse
- * milestone table come from SkyBlockPv's repo ({@code pv/fossils}, {@code pv/corpse_milestones}).
+ * The Glacite Tunnels sub-page: mineshafts, fossil dust, the eight fossils, and corpses looted with the
+ * milestone. Fossil pets and milestones come from SkyBlockPv's repo.
  */
 public class GlacitePage implements GuiProfileViewerPage {
 

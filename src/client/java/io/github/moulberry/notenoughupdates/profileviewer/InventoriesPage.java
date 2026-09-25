@@ -51,26 +51,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Port of the Forge 1.8.9 {@code InventoriesPage} ("Storage" tab: category sidebar, armor/equipment/best-item
- * panels, and the paged inventory grid).
- *
- * <p>TODO(fabric-port) — intentionally simplified vs. the original:
- * <ul>
- *   <li>Item icons for armor, equipment, "best weapon/rod", every inventory grid slot, backpack contents, and
- *   the Green/Purple Candy icons are now rendered via {@code NEUManager#jsonToStack} (ported in a later pass).
- *   They fall back to a plain vanilla item/colored square only when the repo hasn't been synced and the item
- *   JSON isn't available.</li>
- *   <li>The nested backpack/cake-bag NBT byte-array patch-up (previously needed only to make a jsonToStack'd
- *   backpack preview show its own contents) is dropped, since none of the ported pages render nested backpack
- *   previews.</li>
- *   <li>The inventory search box is its own page-owned {@link EditBox} (driven directly by this page's
- *   {@code mouseClicked}/{@code keyPressed}/{@code charTyped}), rather than a screen-level widget shared via
- *   {@code GuiProfileViewer}, to avoid extending the already-ported shell class for a single page's use.</li>
- *   <li>The page-left/page-right arrow icons (vanilla resource-pack-selector texture in the original) are
- *   simplified to plain "&lt;"/"&gt;" text in the same click regions.</li>
- * </ul>
- */
+/** The Storage tab: category sidebar, armor/equipment/best-item panels and the paged inventory grid. */
 public class InventoriesPage implements GuiProfileViewerPage {
 
 	private static final Identifier pv_invs = Identifier.parse("betterpv:pv_invs.png");
@@ -103,17 +84,8 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	private final GuiProfileViewer instance;
 	private final HashMap<String, JsonObject[][][]> inventoryItems = new HashMap<>();
 	/**
-	 * Caches the {@code ItemStack} resolved (via {@code NEUManager#jsonToStack}) for each repo item-JSON object
-	 * shown in this page's grids, keyed by object identity of the (stable, only rebuilt on {@link #resetCache})
-	 * {@code JsonObject} it came from. Without this, {@link #renderJsonItemSlotNoTooltip} would call
-	 * {@code jsonToStack} - which allocates a fresh {@code ItemStack} (and, for skull icons, a fresh
-	 * {@code GameProfile}/{@code ResolvableProfile}) on every cache hit via {@code .copy()} - for every one of the
-	 * up to 54 grid slots, every single frame. Each of those fresh objects looks like a brand-new item to the
-	 * GPU item-icon atlas (keyed off model identity), forcing a full re-bake (a real 3D render pass with its own
-	 * lighting/projection setup) of every visible skull icon every frame instead of once. That is the render-loop
-	 * regression that caused the freeze/native-crash this page's icons were ported to fix: the Forge 1.8.9
-	 * original resolved pet/item icons once into a cached list (see {@code PetsPage#sortedPetsStack}) rather than
-	 * re-resolving them from JSON on every draw call.
+	 * Icons resolved once per repo item object. Calling jsonToStack every frame copies the ItemStack (and skull
+	 * profile) each time, which makes the item atlas re-bake every skull every frame.
 	 */
 	private final Map<JsonObject, ItemStack> resolvedIconCache = new java.util.IdentityHashMap<>();
 
@@ -428,7 +400,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * The repo item for a sack key. Runes are stored under keys that differ from the repo's "NAME_RUNE;tier", so a few
+	 * The repo item for a sack key. Runes use keys that differ from the repo's "NAME_RUNE;tier", so a few
 	 * spellings are tried.
 	 */
 	private static JsonObject repoItemForSackKey(String id) {
@@ -566,11 +538,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 		RenderUtils.drawItemStackWithCount(graphics, resolveIconCached(item), x, y);
 	}
 
-	/**
-	 * See {@link #resolvedIconCache} javadoc: resolves and caches the icon {@code ItemStack} for a repo item-JSON
-	 * object once instead of re-running {@code jsonToStack} (and re-allocating a fresh skull {@code GameProfile})
-	 * on every frame this slot is drawn.
-	 */
+	/** Resolves and caches the icon for a repo item (see {@link #resolvedIconCache}). */
 	private ItemStack resolveIconCached(JsonObject item) {
 		// useCache=false: these are the player's real items, so two with the same internal name can still differ
 		// (count, skin, glint), which the manager's per-internal-name cache would flatten into one.
@@ -582,9 +550,8 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * Renders the repo item icon for {@code internalname} via {@code NEUManager#jsonToStack}, falling back to a
-	 * flat colored square (the pre-jsonToStack behaviour) if the repo hasn't been synced/doesn't have the item -
-	 * used for GREEN_CANDY/PURPLE_CANDY, which have no sensible vanilla item to fall back on otherwise.
+	 * Draws the repo icon for {@code internalname}, or a flat coloured square if the repo doesn't have it.
+	 * Used for GREEN_CANDY and PURPLE_CANDY.
 	 */
 	private void renderRepoItemIconOrFallback(GuiGraphicsExtractor graphics, String internalname, int x, int y, int fallbackColor) {
 		JsonObject itemJson = NotEnoughUpdates.INSTANCE.manager.getItemInformation().get(internalname);

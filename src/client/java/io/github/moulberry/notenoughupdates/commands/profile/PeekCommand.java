@@ -36,21 +36,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Port of the Forge 1.8.9 {@code commands.profile.PeekCommand} ({@code /peek [player]}): prints a quick chat
- * summary of a player's Skyblock stats without opening the full profile viewer GUI.
+ * {@code /peek [player]}: prints a short chat summary of a player's stats.
  *
- * <p>TODO(fabric-port) - simplified vs. the original:
- * <ul>
- *   <li>{@code sendChatMessage} with an id + {@code printChatMessageWithOptionalDeletion} was used to show a
- *   "Getting player information..." status line and then overwrite it in place; that specific
- *   delete-and-replace-by-id chat API doesn't have a direct, stable equivalent to verify against here, so this
- *   just skips the interim status line and prints the final summary once the async profile fetch resolves.</li>
- *   <li>The original polled with a 10-second-timeout retry loop waiting for {@code getProfileInformation} to be
- *   non-null (since the underlying HTTP fetch is itself async/cached). This makes a single attempt instead; if
- *   the profile info isn't ready yet it reports that instead of retrying.</li>
- *   <li>The "special bois" chroma-name easter egg and pet-rarity colour lookup ({@code petRarityToColourMap})
- *   aren't ported (data-layer pieces out of scope here), so the pet line always renders in light purple.</li>
- * </ul>
+ * Simpler than the Forge original: no "Getting player information..." line that gets replaced, one fetch
+ * attempt instead of a retry loop, and the pet line is always light purple.
  */
 public class PeekCommand {
 

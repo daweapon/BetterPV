@@ -39,12 +39,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Port of current NEU's Kotlin {@code BestiaryPage}: categories (and their subcategories) come from the repo's
- * bestiary.json via {@link BestiaryData}, with per-mob tiers, family found/completed bars and the milestone.
- *
- * <p>Differences: since every category in bestiary.json is shown (21 at the time of writing, vs. 17 in NEU),
- * the category and subcategory rows shrink their boxes to fit instead of overlapping; selection happens on mouse
- * release, as elsewhere in this port.
+ * The Bestiary tab, ported from current NEU. Categories come from {@code bestiary.json} via {@link BestiaryData}.
+ * There are more categories than in NEU, so the rows shrink to fit, and selection happens on mouse release.
  */
 public class BestiaryPage implements GuiProfileViewerPage {
 

@@ -32,9 +32,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Every rabbit in Hoppity's collection with its rarity and what it adds to the factory. Read from the NEU repo
- * ({@code constants/hoppity.json}, rarity lists plus per-rabbit overrides in {@code special}); if the repo has no
- * such file, from the bundled SkyBlockPv list, without the bonuses.
+ * Every rabbit in Hoppity's collection with its rarity and factory bonus, from {@code constants/hoppity.json}.
+ * Falls back to the bundled SkyBlockPv list (no bonuses) if the repo lacks it.
  */
 final class Rabbits {
 

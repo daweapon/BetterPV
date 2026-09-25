@@ -33,9 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
- * The fake player drawn on the basic page, replacing the Forge original's {@code EntityOtherPlayerMP}. It's never
- * added to the world. Its skin comes from the player's Mojang profile (fetched once per UUID in the background, the
- * same lookup the game uses for player heads); until that arrives it shows the default skin.
+ * The fake player on the basic page. Never added to the world. Its skin comes from the player's Mojang profile
+ * (fetched once per UUID in the background), with the default skin until it arrives.
  */
 public class ProfilePlayerEntity extends RemotePlayer {
 	/** Mojang profiles with skin textures, by UUID. A null value means the fetch is still running or failed. */

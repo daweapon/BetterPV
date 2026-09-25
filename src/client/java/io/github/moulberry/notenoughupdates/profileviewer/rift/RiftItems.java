@@ -31,10 +31,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The rift's own inventories ({@code rift.inventory}: inventory, armor, equipment, ender chest), decoded once per
- * profile load, and item slots drawn from them.
- */
+/** The rift's inventories ({@code rift.inventory}), decoded once per profile load, and slots drawn from them. */
 final class RiftItems {
 
 	private static JsonObject decodedFor;

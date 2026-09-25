@@ -43,12 +43,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-/**
- * Port of the Forge 1.8.9 {@code ExtraPage} ("Profile Stats" tab).
- *
- * <p>TODO(fabric-port): pronoun display (via {@code GuiProfileViewer.pronouns}/PronounDB) was not ported in the
- * data-layer pass, so it's skipped here as well (same as {@link BasicPage}).
- */
+/** The Profile Stats tab. */
 public class ExtraPage implements GuiProfileViewerPage {
 
 	private static final Identifier pv_extra = Identifier.parse("betterpv:pv_extra.png");

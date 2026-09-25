@@ -38,10 +38,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Port of current NEU's {@code HotmTreeLayout}/{@code HotmTreeRenderer} (Kotlin) minus the drawing: loads the
- * repo's {@code constants/hotmlayout.json} (perk positions, max levels, and Lisp formulas for costs, stats, icons and
- * lore) and evaluates a perk for a player's node levels. Because the whole tree comes from the repo, perks Hypixel
- * adds later appear once the repo is updated.
+ * Port of NEU's {@code HotmTreeLayout}/{@code HotmTreeRenderer} without the drawing: loads
+ * {@code constants/hotmlayout.json} and evaluates a perk for a player's node levels. New perks appear once
+ * the repo is updated.
  */
 public final class HotmTree {
 	private static final Logger LOGGER = LoggerFactory.getLogger("BetterPV");
@@ -143,7 +142,8 @@ public final class HotmTree {
 	}
 
 	/**
-	 * @param nodes the player's perk levels ({@code mining_core.nodes}); {@code toggle_<perk>: false} marks a disabled perk
+	 * {@code nodes} is the player's perk levels ({@code mining_core.nodes}); {@code toggle_<perk>: false} marks a
+	 * disabled perk.
 	 */
 	public PerkState evaluate(Perk perk, JsonObject nodes, int hotmLevel) {
 		Map<String, Integer> levels = levels(nodes);

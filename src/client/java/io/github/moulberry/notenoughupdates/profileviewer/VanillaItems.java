@@ -5,8 +5,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
 /**
- * Dyes, stained glass panes and banners by their registry id. Minecraft 26.2 moved the per-colour {@code Items.X_DYE}
- * fields into colour collections, so looking the items up by id keeps one source tree building on every version.
+ * Dyes, glass panes and banners by registry id. 26.2 moved the per-colour {@code Items.X_DYE} fields into
+ * collections, so looking them up by id builds on every version.
  */
 public final class VanillaItems {
 	public static final Item LIME_DYE = item("lime_dye");

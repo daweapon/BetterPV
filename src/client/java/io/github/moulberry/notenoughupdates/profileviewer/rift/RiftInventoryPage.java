@@ -32,10 +32,7 @@ import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
-/**
- * "Inventory" sub-page of the rift tab, as SkyBlockPv's {@code RiftInventoryScreen}: the rift armor and equipment,
- * then the rift inventory with the hotbar as its bottom row.
- */
+/** The rift armor and equipment, then the rift inventory with the hotbar as its bottom row. */
 public class RiftInventoryPage implements GuiProfileViewerPage {
 
 	private static final Identifier[] ARMOR_SLOT_SPRITES = {

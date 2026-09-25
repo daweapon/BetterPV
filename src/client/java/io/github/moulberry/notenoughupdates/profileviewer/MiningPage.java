@@ -55,10 +55,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * "Heart of the Mountain" tab, following current NEU's layout: HOTM level, Mithril/Gemstone/Glacite powder, all
- * twelve crystals, and the perk tree drawn from the repo's {@code constants/hotmlayout.json} (see {@link HotmTree}),
- * which scrolls because the 10-tier tree is taller than its panel. Icons next to the HOTM bar show the Forge, the
- * Rock pet milestone, and Glacite Tunnels stats on hover.
+ * The Heart of the Mountain tab: level, powders, crystals and the perk tree from {@code hotmlayout.json}
+ * (see {@link HotmTree}), which scrolls. Icons by the HOTM bar show the Forge, Rock pet and Glacite stats.
  */
 public class MiningPage implements GuiProfileViewerPage {
 

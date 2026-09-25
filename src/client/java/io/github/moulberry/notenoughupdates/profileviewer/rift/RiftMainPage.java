@@ -46,9 +46,8 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Main sub-page of the rift tab, as SkyBlockPv's {@code MainRiftScreen}: motes, visits, Enigma souls, Montezuma's
- * cats, the Wither Cage eyes and the timecharms. Player data is {@code rift}, {@code player_stats.rift} and
- * {@code currencies.motes_purse}; the cats, eyes and timecharms come from SkyBlockPv's repo ({@code rift.json}).
+ * Main rift sub-page: motes, visits, Enigma souls, Montezuma's cats, Wither Cage eyes and timecharms. The
+ * cats, eyes and timecharms come from SkyBlockPv's {@code rift.json}.
  */
 public class RiftMainPage implements GuiProfileViewerPage {
 

@@ -47,21 +47,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Port of the Forge 1.8.9 {@code PetsPage} ("Pets" tab). Uses {@link Panorama} for its background, like
- * {@link BasicPage}.
- *
- * <p>TODO(fabric-port) — intentionally simplified vs. the original:
- * <ul>
- *   <li>Per-pet item icons are resolved via {@code NEUManager#jsonToStack} against the repo's
- *   {@code <PETTYPE>;<rarityIndex>} item entries (same scheme {@code ItemResolutionQuery} uses), rather than the
- *   original's {@code ItemUtils#createPetItemstackFromPetInfo} (which also applied held-item skin/stat-boost
- *   lore replacements - not ported, see {@link PetData.Rarity} javadoc). Falls back to rarity-tinted initials
- *   text if the repo hasn't been synced or doesn't have the pet.</li>
- *   <li>The selected pet's head is a mouse-following 3D model with its name above it, like the basic page's
- *   player, instead of the original's bobbing 3.5x item icon.</li>
- *   <li>Day/night panorama selection ({@code SBInfo}) wasn't ported in the data layer either (same as
- *   {@link BasicPage}); always uses the "day" variant.</li>
- * </ul>
+ * The Pets tab, with a {@link Panorama} background like {@link BasicPage}. The selected pet's head is a 3D
+ * model that follows the mouse.
  */
 public class PetsPage implements GuiProfileViewerPage {
 
@@ -75,14 +62,8 @@ public class PetsPage implements GuiProfileViewerPage {
 	private final GuiProfileViewer instance;
 	private List<JsonObject> sortedPets = null;
 	/**
-	 * Icons resolved (via {@link #resolvePetIcon}) once, in parallel with {@link #sortedPets}, the same way the
-	 * Forge 1.8.9 original's {@code sortedPetsStack} worked. Resolving lazily inside the per-frame draw loop
-	 * instead (as this page originally did post-port) called {@code NEUManager#jsonToStack} - which allocates a
-	 * fresh {@code ItemStack}/{@code GameProfile} via {@code .copy()} on every cache hit - for every visible pet
-	 * slot on every single frame. Since virtually every repo pet icon is a distinct-texture player-head skull,
-	 * each of those fresh per-frame objects looks like a brand-new item to the GPU item-icon atlas (keyed by
-	 * model identity), forcing a full re-bake (its own 3D render pass) of every pet icon every frame instead of
-	 * once - the render-loop regression behind the freeze/native crash this page's real icons were meant to fix.
+	 * Pet icons, resolved once alongside {@link #sortedPets}. Resolving per frame copies the ItemStack and skull
+	 * profile each time and makes the item atlas re-bake every icon every frame.
 	 */
 	private List<ItemStack> sortedPetIcons = null;
 	private int selectedPet = -1;
@@ -442,9 +423,8 @@ public class PetsPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * The selected pet's head as a 3D model in the panorama box, turning to follow the mouse like the basic page's
-	 * player model. It's worn by an invisible armor stand (which only draws what it wears), drawn with the same
-	 * vanilla inventory-preview helper; the stand is never added to the world.
+	 * The selected pet's head as a 3D model in the panorama box, worn by an invisible armor stand that is never
+	 * added to the world, and turned to follow the mouse.
 	 */
 	private void drawPetHead(GuiGraphicsExtractor graphics, ItemStack head, int guiLeft, int guiTop, int mouseX, int mouseY) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -522,10 +502,8 @@ public class PetsPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * Resolves the repo item icon for a pet, using the same {@code <PETTYPE>;<rarityIndex>} internal-name scheme
-	 * {@link io.github.moulberry.notenoughupdates.util.ItemResolutionQuery#resolveInternalName} uses for pets
-	 * found via NBT. Returns {@code null} (letting callers fall back to the rarity-tinted initials) if the repo
-	 * hasn't been synced or doesn't have this pet.
+	 * The repo icon for a pet, by {@code <PETTYPE>;<rarityIndex>}. Null if the repo doesn't have it, so callers
+	 * fall back to the rarity-tinted initials.
 	 */
 	private static net.minecraft.world.item.ItemStack resolvePetIcon(String petType, PetData.Rarity rarity) {
 		String petId = petType.toUpperCase(Locale.ROOT) + ";" + rarity.petId;

@@ -33,10 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Better PV's small config file, {@code <config-dir>/betterpv/config.json}, read with Gson. It holds
- * {@code backendUrl}, an optional override for the Better PV backend (see {@link BpvBackend}; leave it empty to
- * use the default), the recent-player history, and the settings screen's options. The mod has no API key setting: Hypixel keys stay on the backend (see
- * {@link ApiUtil#newHypixelApiRequest}). Older files may still have an {@code apiKey} field, which is ignored.
+ * Better PV's config file, {@code <config-dir>/betterpv/config.json}: an optional {@code backendUrl} override
+ * (see {@link BpvBackend}), the recent-player history and the settings screen's options. There's no API key
+ * setting; keys stay on the backend. An old {@code apiKey} field is ignored.
  */
 public class BpvConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

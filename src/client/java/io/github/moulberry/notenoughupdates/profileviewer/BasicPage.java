@@ -46,23 +46,7 @@ import java.util.UUID;
 
 import static io.github.moulberry.notenoughupdates.util.Utils.roundToNearestInt;
 
-/**
- * Port of the Forge 1.8.9 {@code BasicPage} (the default "Your Skills" tab).
- *
- * <p><b>TODO(fabric-port) — intentionally simplified vs. the original:</b>
- * <ul>
- *   <li>The player model ({@link ProfilePlayerEntity}, drawn with vanilla's inventory-preview helper) has no
- *   rank/name overlay above it.</li>
- *   <li>The active-pet icon and the "Potato King" easter-egg item icons both relied on
- *   {@code NEUManager#jsonToStack(JsonObject)} turning arbitrary Hypixel item JSON into a real, correctly-skinned
- *   {@code ItemStack} (skulls, custom textures, etc.) - that pipeline wasn't ported in the data-layer pass this
- *   GUI port builds on, so those icon renders are skipped (the active pet's name is still shown as text).</li>
- *   <li>Pronoun lookup/display ({@code PronounDB}) wasn't ported in the data-layer pass either, so it's skipped
- *   here too.</li>
- *   <li>The click-and-drag panorama rotation (via LWJGL2 {@code Mouse.isButtonDown} polling, which no longer
- *   exists) is simplified to a constant time-based rotation.</li>
- * </ul>
- */
+/** The default "Your Skills" tab. */
 public class BasicPage implements GuiProfileViewerPage {
 
 	private final GuiProfileViewer instance;
@@ -490,9 +474,8 @@ public class BasicPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * SkyBlock level (100 XP per level, from leveling.experience), laid out as in current NEU's BasicPage: the
-	 * coloured level number over the SkyBlock-level skull (both 1.5x), then "n/100" and the progress bar, inside
-	 * the middle box of pv_basic.png. (Clicking it opens the level-breakdown page, {@link LevelPage}.)
+	 * SkyBlock level (100 XP per level): the level number over the skull, then n/100 and the bar, in the middle
+	 * box of pv_basic.png. Clicking it opens {@link LevelPage}.
 	 */
 	private void drawSkyblockLevel(
 		GuiGraphicsExtractor graphics, JsonObject profileInfo, int guiLeft, int guiTop, int mouseX, int mouseY

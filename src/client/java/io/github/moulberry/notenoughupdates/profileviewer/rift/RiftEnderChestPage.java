@@ -34,10 +34,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.List;
 
-/**
- * "Ender Chest" sub-page of the rift tab, as SkyBlockPv's {@code RiftEnderChestScreen}: the rift ender chest, one
- * 45-slot page at a time, picked with the numbered buttons above it.
- */
+/** The rift ender chest, one 45-slot page at a time, picked with the numbered buttons above it. */
 public class RiftEnderChestPage implements GuiProfileViewerPage {
 
 	private static final int PAGE_SIZE = 45;

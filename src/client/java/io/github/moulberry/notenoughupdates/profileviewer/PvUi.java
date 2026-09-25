@@ -32,10 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Drawing helpers for the Farming, Chocolate Factory and Rift tabs. Sections have a centred title and no panel
- * behind them, like the Loadouts and Foraging tabs.
- */
+/** Drawing helpers for the Farming, Chocolate Factory and Rift tabs: centred section titles with no panel. */
 public final class PvUi {
 
 	public static final int SLOT = 18;

@@ -31,21 +31,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-/**
- * Port of the Forge 1.8.9 {@code commands.profile.ViewProfileCommand} ({@code /neuprofile [player]}).
- *
- * <p>API mapping notes: client-side commands in Forge 1.8.9 subclassed {@code ClientCommandBase}
- * ({@code net.minecraft.command.CommandBase}) and were registered on {@code ClientCommandHandler.instance}.
- * Modern Fabric has no equivalent base class at all - client commands are plain Brigadier command trees
- * registered through Fabric API's {@code ClientCommandRegistrationCallback.EVENT}, using
- * {@code ClientCommands.literal(...)}/{@code ClientCommands.argument(...)} (drop-in replacements for
- * {@code LiteralArgumentBuilder.literal}/{@code RequiredArgumentBuilder.argument} that use
- * {@link FabricClientCommandSource} as the source type) and registered against the
- * {@code CommandDispatcher<FabricClientCommandSource>} passed into the callback. There is no tab-completion
- * helper method to override; Brigadier's own {@code suggests(...)} takes over that role, fed from
- * {@link FabricClientCommandSource#getCustomTabSuggestions()} (the same online-player-name list vanilla
- * client commands like {@code /msg} tab-complete against).
- */
+/** {@code /neuprofile [player]}, a plain Brigadier client command. Tab completion uses the online player names. */
 public class ViewProfileCommand {
 
 	public static final Consumer<FabricClientCommandSource> RUNNABLE = source -> openProfile(source, source.getPlayer().getGameProfile().name());
@@ -72,9 +58,7 @@ public class ViewProfileCommand {
 
 	public static void openProfile(FabricClientCommandSource source, String playerName) {
 		NotEnoughUpdates.INSTANCE.getProfileViewer().getProfileByName(playerName, profile -> {
-			// The getProfileByName callback runs on an async network-request thread, not the render thread -
-			// every call into Minecraft/GUI state here must be dispatched via Client#execute, or it can crash
-			// natively (this previously crashed the game when a lookup failed off-thread).
+			// This callback runs on a network thread, so anything touching the GUI has to go through Client#execute.
 			source.getClient().execute(() -> {
 				if (profile == null) {
 					source.sendError(Component.literal(ChatFormatting.RED + "Unknown player, or the Better PV server couldn't be reached."));

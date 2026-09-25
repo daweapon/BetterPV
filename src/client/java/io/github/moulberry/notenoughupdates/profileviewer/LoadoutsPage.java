@@ -45,9 +45,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * "Loadouts" tab: the player's saved loadouts, each with its armor set, equipment set, active pet and the Heart of
- * the Mountain / Heart of the Forest tree slots it selects. The layout, item choices and node states follow
- * SkyBlockPv's {@code LoadoutTab}; the tree layouts come from its repo (see {@code skill_trees.json}).
+ * The Loadouts tab: each saved loadout's armor, equipment, pet and HOTM/HOTF tree slots. Follows SkyBlockPv's
+ * {@code LoadoutTab}; the tree layouts are in {@code skill_trees.json}.
  */
 public class LoadoutsPage implements GuiProfileViewerPage {
 

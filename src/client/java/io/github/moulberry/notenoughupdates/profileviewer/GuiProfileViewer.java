@@ -59,37 +59,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Port of the Forge 1.8.9 {@code GuiProfileViewer} main screen.
- *
- * <p>API mapping notes (Forge 1.8.9 -&gt; Fabric 26.1.2), in addition to the ones on {@link GuiProfileViewerPage}:
- * <ul>
- *   <li>{@code GuiScreen} -&gt; {@code net.minecraft.client.gui.screens.Screen}.</li>
- *   <li>{@code drawScreen(int, int, float)} -&gt; {@code extractRenderState(GuiGraphicsExtractor, int, int, float)}.
- *   Minecraft no longer draws immediately from this call; it builds up a list of render-state objects on the
- *   passed-in {@code GuiGraphicsExtractor} that get consumed by the GPU renderer afterwards.</li>
- *   <li>{@code mouseClicked(int,int,int) throws IOException} -&gt; {@code boolean mouseClicked(MouseButtonEvent, boolean doubleClick)}.</li>
- *   <li>{@code keyTyped(char,int) throws IOException} -&gt; split into {@code keyPressed(KeyEvent)} and
- *   {@code charTyped(CharacterEvent)}.</li>
- *   <li>The custom {@code GuiElementTextField} player-name search box is replaced with vanilla's
- *   {@code net.minecraft.client.gui.components.EditBox}, added as a normal screen widget via
- *   {@code addRenderableWidget}. This means Screen's default input routing (focus, click-to-focus, typing) is
- *   handled for us instead of needing to be reimplemented; only Enter-to-submit needed a manual hook.</li>
- * </ul>
- *
- * <p><b>TODO(fabric-port) — intentionally simplified vs. the original:</b>
- * <ul>
- *   <li>The custom Gaussian-blur backdrop (a hand-rolled two-pass GLSL shader against a framebuffer, via
- *   {@code cosmetics.ShaderManager}/{@code net.minecraft.client.shader.Shader}) is replaced with vanilla's own
- *   built-in menu blur, applied by {@code Screen#extractBackground} before {@link #extractRenderState} runs, which
- *   blurs the whole window instead of just the panel's bounds, but needs no custom shader work.</li>
- *   <li>The "gold shimmer" maxed-skill-bar shader ({@code renderGoldBar}) is approximated with a few plain
- *   {@code graphics.fill} rectangles forming a looping sweep instead of a custom GLSL shader - see that
- *   method's javadoc.</li>
- *   <li>{@code config.profileViewer.pageLayout}/{@code alwaysShowBingoTab}/{@code showPronounsInPv} and other
- *   {@code NEUConfig} reads are out of scope for this pass (see repo-wide TODOs); this uses the natural
- *   {@link ProfileViewerPage} enum order as a hardcoded layout and always hides the Bingo tab unless the
- *   profile's game mode is actually bingo.</li>
- * </ul>
+ * The profile viewer screen. Uses vanilla's menu blur for the backdrop and an {@link EditBox} for the name
+ * search box, and draws the gold shimmer bars with plain fills instead of a shader.
  */
 public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 
@@ -568,11 +539,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		}
 	}
 
-	/**
-	 * Draws {@code pv_bg}, leaving out its top border under the selected tab. NEU did this with the depth buffer
-	 * (the selected tab was drawn first at a higher z). The selected tab's bottom rows are translucent, so drawing
-	 * it over the border can't hide the line.
-	 */
+	/** Draws {@code pv_bg} without its top border under the selected tab (NEU used the depth buffer for this). */
 	private void drawWindowBackground(GuiGraphicsExtractor graphics) {
 		int pressedIndex = visibleTabs().indexOf(currentPage);
 		if (pressedIndex < 0) {
@@ -866,13 +833,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		RenderUtils.drawSkillIcon(graphics, stack, x, y - 6);
 	}
 
-	/**
-	 * A moving rainbow/chroma gradient for maxed skill bars, matching the style common Hypixel SkyBlock mods use
-	 * for maxed stats. Drawn as a series of narrow vertical slices, each a different hue computed from its
-	 * position along the bar plus a time offset so the gradient slowly scrolls - cheap plain
-	 * {@code graphics.fill} rectangles rather than a custom shader (see class-level TODO), and at this bar's
-	 * small size (~100px wide, 5px tall) the slices aren't visually distinguishable from a smooth gradient.
-	 */
+	/** A scrolling rainbow gradient for maxed bars, drawn as narrow vertical slices of shifting hue. */
 	public void renderGoldBar(GuiGraphicsExtractor graphics, float x, float y, float xSize) {
 		int left = Math.round(x);
 		int width = Math.max(1, Math.round(xSize));
@@ -909,9 +870,8 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	}
 
 	/**
-	 * Draws bar pixels [from, to) of a {@code width}-wide bar using a 182px XP bar sprite. As in the original, the
-	 * left half comes from the sprite's left end and the right half from its right end, so a shorter bar keeps
-	 * both rounded caps instead of being stretched or cut off.
+	 * Draws bar pixels [from, to) of a {@code width}-wide bar from the 182px XP bar sprite. The left half comes
+	 * from the sprite's left end and the right half from its right end, so short bars keep both rounded caps.
 	 */
 	private static void drawXpBarSprite(GuiGraphicsExtractor graphics, Identifier sprite, int x, int y, int width, int from, int to) {
 		if (to <= from) return;

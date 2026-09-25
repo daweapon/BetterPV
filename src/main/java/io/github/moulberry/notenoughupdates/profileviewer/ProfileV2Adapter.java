@@ -7,13 +7,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Rewrites a {@code v2/skyblock/profiles} member object into the v1 layout the ported profile viewer pages read
- * (e.g. {@code player_data.experience.SKILL_COMBAT} -> {@code experience_skill_combat}), so the pages keep working
- * unchanged. v1 keys are only added, never overwritten, and the v2 keys are left in place.
- *
- * <p>Not mapped here: the wardrobe. Hypixel replaced {@code wardrobe_contents} (one packed inventory) with
- * {@code loadout.armor}, which stores each armour piece separately; {@code ProfileViewer} decodes those and rebuilds
- * the packed layout.
+ * Rewrites a {@code v2/skyblock/profiles} member into the v1 layout the pages read (e.g.
+ * {@code player_data.experience.SKILL_COMBAT} -> {@code experience_skill_combat}). v1 keys are only added,
+ * never overwritten. The wardrobe isn't mapped here; {@code ProfileViewer} rebuilds it from {@code loadout.armor}.
  */
 public final class ProfileV2Adapter {
 	private ProfileV2Adapter() {}
@@ -72,9 +68,9 @@ public final class ProfileV2Adapter {
 			member.add("jacob2", jacob2);
 		}
 
-		// Heart of the Mountain moved from mining_core.{experience,nodes} to skill_tree.{experience,nodes}.mining.
-		// There are now up to 5 tree slots: slot 1 is nodes.mining, slot N is nodes.mining_N, and each slot has its own
-		// powder_spent_<powder>[_N]. powder_<powder> became the total earned. Map the selected slot back.
+		// HOTM moved to skill_tree.{experience,nodes}.mining. There are up to 5 tree slots: slot 1 is nodes.mining,
+		// slot N is nodes.mining_N, each with its own powder_spent_<powder>[_N], and powder_<powder> is the total
+		// earned. Map the selected slot back.
 		JsonObject miningCore = object(member, "mining_core");
 		if (miningCore != null) {
 			JsonElement slotElement = element(member, "skill_tree", "selected_skill_tree_slot", "mining");

@@ -41,20 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/**
- * Port of the Forge 1.8.9 {@code CollectionsPage} ("Collections" tab: collection grid + minion tier grid, with a
- * category sidebar and paging).
- *
- * <p>TODO(fabric-port) — intentionally simplified vs. the original:
- * <ul>
- *   <li>Minion tier icons are rendered via {@code NEUManager#jsonToStack} against the repo's
- *   {@code <MINION>_GENERATOR_<tier>} entries (clamped to tier 1 for not-yet-unlocked minions so the base icon
- *   still shows); silently skipped (tier-completion background/roman-numeral text still shown) if the repo
- *   hasn't been synced or doesn't have that entry.</li>
- *   <li>The page-left/page-right arrow icons (drawn from the vanilla resource-pack-selector texture in the
- *   original) are simplified to plain "&lt;"/"&gt;" text in the same click regions.</li>
- * </ul>
- */
+/** The Collections tab: collection grid and minion tiers, with a category sidebar. */
 public class CollectionsPage implements GuiProfileViewerPage {
 
 	private static final Identifier pv_cols = Identifier.parse("betterpv:pv_cols.png");
@@ -74,13 +61,8 @@ public class CollectionsPage implements GuiProfileViewerPage {
 	private int page = 0;
 	private int maxPage = 0;
 	/**
-	 * Caches minion tier icons resolved via {@code NEUManager#jsonToStack}, keyed by
-	 * {@code <MINION>_GENERATOR_<tier>}. Without this, every visible minion slot would call {@code jsonToStack}
-	 * (which allocates a fresh {@code ItemStack}/{@code GameProfile} via {@code .copy()} on every cache hit)
-	 * every single frame, defeating the GPU item-icon atlas's per-item caching and forcing a full re-bake of every
-	 * skull icon every frame - see the identical fix/rationale in {@code InventoriesPage#resolvedIconCache}. A new
-	 * {@code CollectionsPage} instance is created per profile-viewer screen open, so this never needs explicit
-	 * invalidation.
+	 * Minion icons by {@code <MINION>_GENERATOR_<tier>}. Resolving them every frame would allocate a new
+	 * ItemStack each time and force the item atlas to rebuild the skulls, so they are cached.
 	 */
 	private final java.util.Map<String, ItemStack> minionIconCache = new java.util.HashMap<>();
 
@@ -100,10 +82,7 @@ public class CollectionsPage implements GuiProfileViewerPage {
 		return result;
 	}
 
-	/**
-	 * Slot behind a collection or minion: NEU's grey slot, filled gold from the bottom by how close it is to max
-	 * (NEU tinted the same texture with 255, 185, 0).
-	 */
+	/** The grey slot behind a collection or minion, filled gold from the bottom by how close it is to max. */
 	private static void drawSlot(GuiGraphicsExtractor graphics, int x, int y, float completedness) {
 		int gold = Math.round(20 * Math.max(0, Math.min(1, completedness)));
 		if (gold < 20) {

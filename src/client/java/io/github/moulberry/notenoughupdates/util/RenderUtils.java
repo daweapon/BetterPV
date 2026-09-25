@@ -30,25 +30,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Client-only rendering helpers used by the profile viewer GUI port. This is the client-side sibling of
- * {@link Utils}: it exists because {@code src/main/java} is shared with a (theoretical) dedicated-server
- * environment and can't reference client-only Minecraft classes like {@code Minecraft}/{@code Font}/
- * {@code GuiGraphicsExtractor}, while {@code src/client/java} can.
- *
- * <p>API mapping notes (Forge 1.8.9 {@code Utils} draw helpers -&gt; Fabric 26.1.2):
- * <ul>
- *   <li>All immediate-mode GL draw calls (Tessellator/GlStateManager/{@code drawTexturedModalRect}) are gone.
- *   Screens now build up a list of "render state" objects on a {@code GuiGraphicsExtractor} (passed into every
- *   {@code extractRenderState}/page-draw call), which the renderer consumes later in the frame. Every helper here
- *   takes that object as its first parameter.</li>
- *   <li>{@code FontRenderer#drawString} -&gt; {@code GuiGraphicsExtractor#text(Font, ...)}.</li>
- *   <li>{@code RenderItem#renderItemAndEffectIntoGUI}/{@code drawItemStack} -&gt; {@code GuiGraphicsExtractor#item(ItemStack, x, y)}.</li>
- *   <li>{@code GuiScreen#drawHoveringText}/tooltips -&gt; {@code GuiGraphicsExtractor#setComponentTooltipForNextFrame(...)},
- *   which defers the actual tooltip draw to the end of the frame (so it draws on top of everything else) instead
- *   of needing to be called last manually.</li>
- *   <li>Manual GL matrix scale/translate around an item draw (for the small "linear" skill icons) -&gt;
- *   {@code graphics.pose()} is a 2D affine {@code Matrix3x2fStack} with the same push/translate/scale/pop shape.</li>
- * </ul>
+ * Client-only rendering helpers for the profile viewer, the client-side sibling of {@link Utils} (which lives
+ * in {@code src/main} and can't touch client classes). Every helper takes the {@code GuiGraphicsExtractor}
+ * first; the old immediate-mode GL calls are gone.
  */
 public class RenderUtils {
 
@@ -76,11 +60,7 @@ public class RenderUtils {
 		graphics.item(stack, x, y);
 	}
 
-	/**
-	 * The Forge original had a "Linear" variant used while a manual GL scale/translate matrix was active around
-	 * the call. The new pose stack (accessible via {@code graphics.pose()}) plays the same role, so this is just
-	 * an alias kept for call-site parity with the ported page classes.
-	 */
+	/** Same as the non-linear draw; kept so ported call sites read the same. */
 	/** Like {@link #drawItemStack} but also draws the stack count (and durability bar) over the icon. */
 	public static void drawItemStackWithCount(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y) {
 		if (stack == null || stack.isEmpty()) return;
@@ -102,38 +82,22 @@ public class RenderUtils {
 	}
 
 	/**
-	 * {@code GuiGraphicsExtractor#text(...)} silently no-ops (never even queues a render-state object) whenever
-	 * {@code ARGB.alpha(color) == 0} - see {@code GuiGraphicsExtractor.text(Font, FormattedCharSequence, int, int,
-	 * int, boolean)} in the decompiled 26.1.2 sources, which is gated by {@code if (ARGB.alpha(color) != 0)}
-	 * before calling {@code guiRenderState.addText(...)}. All the colour ints ported over from the Forge 1.8.9
-	 * {@code FontRenderer#drawString} call sites (e.g. {@code 0xFFFFFF}, {@code 0x3FE0D0}) are bare RGB with no
-	 * alpha byte set, which the old API treated as implicitly opaque but the new one treats as invisible. Every
-	 * text helper below routes its colour through this so legacy RGB-only colours become fully opaque instead of
-	 * being dropped, while colours that already carry a real alpha byte are left alone.
+	 * {@code GuiGraphicsExtractor#text} does nothing when the colour's alpha is 0, and the old bare-RGB colours
+	 * (0xFFFFFF, 0x3FE0D0) have no alpha byte. Text helpers route colours through this to make them opaque;
+	 * colours that already have an alpha are left alone.
 	 */
 	public static int opaque(int colour) {
 		return (colour & 0xFF000000) == 0 ? (colour | 0xFF000000) : colour;
 	}
 
-	/**
-	 * Port of the Forge 1.8.9 {@code Utils.playPressSound()} (old {@code gui.button.press} via
-	 * {@code Minecraft#getSoundHandler()}) -&gt; {@code SoundEvents.UI_BUTTON_CLICK} via
-	 * {@code Minecraft#getSoundManager()}. Lives here rather than the common {@code util.Utils} (all of whose
-	 * call sites are already client-only) since playing a sound needs {@code Minecraft}'s client-only sound
-	 * manager, which isn't safe to reference from {@code util.Utils}'s common/dedicated-server-safe source set.
-	 */
+	/** Plays the button click sound. Here rather than in {@code Utils} because the sound manager is client-only. */
 	public static void playPressSound() {
 		Minecraft.getInstance()
 			.getSoundManager()
 			.play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0f));
 	}
 
-	/**
-	 * Drop-in replacement for a direct {@code graphics.text(font, str, x, y, colour, shadow)} call that guards
-	 * against the same alpha=0 silent-no-op described on {@link #opaque(int)}. Several page classes called
-	 * {@code graphics.text(...)} directly (bypassing {@link #drawStringCentered}) with the same bare-RGB legacy
-	 * colours, so those call sites route through this instead.
-	 */
+	/** Like {@code graphics.text(font, str, x, y, colour, shadow)}, but with the alpha fix from {@link #opaque(int)}. */
 	public static void text(GuiGraphicsExtractor graphics, Font font, String str, int x, int y, int colour, boolean shadow) {
 		graphics.text(font, str, x, y, opaque(colour), shadow);
 	}
@@ -181,9 +145,8 @@ public class RenderUtils {
 	}
 
 	/**
-	 * Draws {@code first} left-aligned and {@code second} right-aligned within a {@code length}-pixel wide span
-	 * starting at (x, y), using the default client font. Mirrors the old two-part "stat name: value" rows,
-	 * including their fallback: if the two don't fit side by side, they're drawn as one line, shrunk to fit.
+	 * Draws {@code first} left-aligned and {@code second} right-aligned in a {@code length}-pixel span at (x, y).
+	 * If they don't fit side by side they're drawn as one line, shrunk to fit.
 	 */
 	public static void renderAlignedString(GuiGraphicsExtractor graphics, String first, String second, float x, float y, int length) {
 		Font font = Minecraft.getInstance().font;

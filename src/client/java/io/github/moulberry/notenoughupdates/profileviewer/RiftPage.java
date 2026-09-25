@@ -27,10 +27,7 @@ import io.github.moulberry.notenoughupdates.profileviewer.rift.RiftMainPage;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-/**
- * "Rift" tab, following SkyBlockPv's rift categories: general rift progress and timecharms, the rift inventory,
- * and the rift ender chest.
- */
+/** The Rift tab: general progress and timecharms, the rift inventory and the rift ender chest. */
 public class RiftPage extends CategorizedPage {
 
 	public RiftPage(GuiProfileViewer instance) {

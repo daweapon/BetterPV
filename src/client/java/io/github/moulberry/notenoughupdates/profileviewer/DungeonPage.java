@@ -46,23 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Port of the Forge 1.8.9 {@code DungeonPage} ("Dungeoneering" tab: Catacombs level/floor-time-target
- * calculator, boss-collection completions, and dungeon class levels).
- *
- * <p>TODO(fabric-port) — intentionally simplified vs. the original:
- * <ul>
- *   <li>The Normal/Master Mode side-tab icons are rendered via {@code NEUManager#jsonToStack} against the repo
- *   items ({@code DUNGEON_STONE}/{@code MASTER_SKULL_TIER_7}), falling back to vanilla stone/netherite block
- *   icons if the repo hasn't been synced. Boss-completion head icons are built the same way the original built
- *   them (a raw player-head skin-texture NBT skull, via the already-ported {@code Utils#createSkull}).</li>
- *   <li>The blurred-panel background behind the side-tab buttons ({@code renderBlurredBackground}) isn't
- *   reimplemented (same TODO as {@code GuiProfileViewer}'s panel background); falls back to a flat translucent
- *   fill.</li>
- *   <li>The "go to catacombs level" number input is this page's own {@link EditBox} (driven manually), like
- *   {@code InventoriesPage}'s search box, rather than the original's custom {@code GuiElementTextField}.</li>
- * </ul>
- */
+/** The Dungeoneering tab: Catacombs level and floor time calculator, boss completions and class levels. */
 public class DungeonPage implements GuiProfileViewerPage {
 
 	private static final Identifier pv_dung = Identifier.parse("betterpv:pv_dung.png");

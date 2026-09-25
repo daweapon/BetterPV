@@ -30,8 +30,8 @@ import io.github.moulberry.notenoughupdates.util.Utils;
 import java.util.List;
 
 /**
- * Garden data shared by the farming tab's sub-pages: the crops, SkyBlockPv's garden repo data (bundled as
- * {@code profile_viewer/garden.json}) and the profile's garden from {@code v2/skyblock/garden}.
+ * Garden data shared by the farming sub-pages: crops, {@code profile_viewer/garden.json} and the profile's
+ * garden from {@code v2/skyblock/garden}.
  */
 public final class Garden {
 

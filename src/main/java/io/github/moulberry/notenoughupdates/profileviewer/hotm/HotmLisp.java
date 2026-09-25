@@ -27,13 +27,12 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * The small Lisp dialect used by the repo's {@code constants/hotmlayout.json} for perk costs, stats, items and lore
- * conditions. Current NEU runs it on the {@code moe.nea.lisp} library plus {@code ExtraLispMethods}; this is a
- * self-contained Java version covering what the layout file uses: {@code defun}, {@code if}, arithmetic, comparisons,
- * {@code pow}/{@code round}/{@code ceil}/{@code floor}, {@code format-int}, {@code list.new}/{@code list.at},
- * numbers, strings and {@code :ATOM} keywords.
+ * The small Lisp used by {@code constants/hotmlayout.json} for perk costs, stats, items and lore conditions.
+ * Current NEU uses the {@code moe.nea.lisp} library; this is a self-contained version of what the file needs:
+ * {@code defun}, {@code if}, arithmetic, comparisons, {@code pow}/{@code round}/{@code ceil}/{@code floor},
+ * {@code format-int}, {@code list.new}/{@code list.at}, numbers, strings and {@code :ATOM} keywords.
  *
- * <p>Values are {@link Double}, {@link String}, {@link Boolean}, {@link Atom}, {@link List}, {@link Fn}, or
+ * Values are {@link Double}, {@link String}, {@link Boolean}, {@link Atom}, {@link List}, {@link Fn}, or
  * {@code null} for nil.
  */
 public final class HotmLisp {

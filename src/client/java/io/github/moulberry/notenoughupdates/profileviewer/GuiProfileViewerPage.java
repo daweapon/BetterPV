@@ -24,37 +24,17 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 
 /**
- * Port of the Forge 1.8.9 {@code GuiProfileViewerPage} abstract class (kept as an interface here, since Java's
- * lack of multiple inheritance never mattered for it and an interface with default methods reads more cleanly).
- *
- * <p>API mapping notes (Forge 1.8.9 -&gt; Fabric 26.1.2):
- * <ul>
- *   <li>{@code drawPage(int mouseX, int mouseY, float partialTicks)} -&gt; renamed to match the modern
- *   {@code Renderable#extractRenderState}/{@code Screen#extractRenderState} naming and now takes the
- *   {@code GuiGraphicsExtractor} that all drawing goes through (there's no more global GL state to draw
- *   against).</li>
- *   <li>{@code mouseClicked(int, int, int) throws IOException} -&gt; {@code boolean mouseClicked(double, double, int)}.
- *   Mouse coordinates are {@code double} in the modern input system (sub-pixel precision from high-DPI/scaled
- *   displays); IOException was never actually thrown by any implementation and modern {@code GuiEventListener}
- *   methods don't declare it.</li>
- *   <li>{@code mouseReleased(int, int, int)} -&gt; {@code double} coordinates, same as above.</li>
- *   <li>{@code keyTyped(char, int) throws IOException} -&gt; split into {@code keyPressed(KeyEvent)} (special keys:
- *   enter, backspace, arrows, etc, matching {@code GuiEventListener#keyPressed}) and {@code charTyped(CharacterEvent)}
- *   (printable characters), matching how modern {@code Screen}/text-field input works.</li>
- * </ul>
+ * A page of the profile viewer. Drawing goes through a {@code GuiGraphicsExtractor}, mouse coordinates are
+ * doubles, and key input is split into {@code keyPressed} and {@code charTyped}.
  */
 public interface GuiProfileViewerPage {
 
-	/**
-	 * @return Instance of the current {@link GuiProfileViewer}
-	 */
+	/** The current {@link GuiProfileViewer}. */
 	GuiProfileViewer getInstance();
 
 	void drawPage(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks);
 
-	/**
-	 * @return Whether to consume the click (stop further handling in the caller)
-	 */
+	/** Returns true to consume the click. */
 	default boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 		return false;
 	}
@@ -62,12 +42,7 @@ public interface GuiProfileViewerPage {
 	default void mouseReleased(double mouseX, double mouseY, int mouseButton) {
 	}
 
-	/**
-	 * Replaces the Forge pages' polling of {@code Mouse.getDWheel()} inside {@code drawPage}.
-	 *
-	 * @param scrollY wheel notches, positive when scrolling up
-	 * @return Whether to consume the scroll
-	 */
+	/** Mouse wheel scroll; {@code scrollY} is positive when scrolling up. Returns true to consume it. */
 	default boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
 		return false;
 	}

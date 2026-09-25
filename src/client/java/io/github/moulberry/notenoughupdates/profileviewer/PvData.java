@@ -46,9 +46,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Data helpers for the tabs built on SkyBlockPv's repo data (garden, chocolate factory, rift): the bundled JSON
- * files in {@code assets/betterpv/profile_viewer/}, item lookup, SkyBlockPv's text tags and reward
- * formulas, and its cumulative cost lists.
+ * Data helpers for the garden, chocolate factory and rift tabs: the bundled JSON in
+ * {@code assets/betterpv/profile_viewer/}, item lookup, SkyBlockPv's text tags, reward formulas and cost lists.
  */
 public final class PvData {
 
@@ -103,7 +102,7 @@ public final class PvData {
 
 	/**
 	 * An item by SkyBlock id from the NEU repo ({@code INK_SACK:3} is {@code INK_SACK-3} there), else a vanilla
-	 * item id ({@code minecraft:sugar}, {@code witch_spawn_egg}), else a barrier.
+	 * item id, else a barrier.
 	 */
 	public static ItemStack item(String id) {
 		if (id == null) return new ItemStack(Items.BARRIER);
@@ -236,8 +235,8 @@ public final class PvData {
 	}
 
 	/**
-	 * Tooltip lines for a levelled upgrade's costs: what {@code level} levels cost so far out of the total for the
-	 * last level. {@code copper} and {@code gold_medal} are named; anything else is a repo item.
+	 * Tooltip lines for an upgrade's costs: what {@code level} levels cost out of the total. {@code copper} and
+	 * {@code gold_medal} are named; anything else is a repo item.
 	 */
 	public static List<String> costLines(int level, List<Map<String, Long>> costs) {
 		List<String> lines = new ArrayList<>();
@@ -258,10 +257,7 @@ public final class PvData {
 
 	// ---- formulas ----
 
-	/**
-	 * Evaluates one of SkyBlockPv's reward formulas: numbers, {@code level}, + - * /, brackets and
-	 * {@code clamp/min/max}.
-	 */
+	/** Evaluates a SkyBlockPv reward formula: numbers, {@code level}, + - * /, brackets and clamp/min/max. */
 	public static double evaluate(String formula, double level) {
 		try {
 			return new Formula(formula.replace(" ", ""), level).parse();

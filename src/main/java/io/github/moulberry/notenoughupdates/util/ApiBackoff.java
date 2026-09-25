@@ -24,20 +24,16 @@ import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import java.util.Locale;
 
 /**
- * Keeps key-protected Hypixel requests (see {@link ApiUtil#newHypixelApiRequest}) from hammering a key Hypixel is
- * already unhappy with. The profile viewer asks again every few seconds while it's open, and repeated failed
- * requests can get the key or account flagged (the answers escalate from "Invalid API key" to "violates the API
- * policy" to "Too many requests").
+ * Stops key-protected Hypixel requests from hammering a key Hypixel is already unhappy with. The viewer
+ * re-asks every few seconds, and repeated failures can get a key or account flagged.
  *
  * <ul>
- *   <li>"Invalid API key" / "violates the API policy": no more key-protected requests until the player opens the
- *   profile viewer again ({@link #reset}).</li>
- *   <li>"Too many requests" / key throttle: wait at least a minute, doubling with each further throttle, up to
- *   ten minutes.</li>
- *   <li>Any successful request clears the throttle count. Other failures (no garden, unknown endpoint, bad input)
- *   say nothing about the key and are ignored.</li>
+ *   <li>"Invalid API key" / "violates the API policy": no more requests until the player reopens the viewer
+ *   ({@link #reset}).</li>
+ *   <li>"Too many requests": wait a minute, doubling with each throttle up to ten minutes.</li>
+ *   <li>A success clears the throttle count. Other failures say nothing about the key and are ignored.</li>
  * </ul>
- * While blocked, requests aren't sent at all; they answer at once with a Hypixel-style error saying why.
+ * While blocked, requests aren't sent; they answer at once with a Hypixel-style error.
  */
 public final class ApiBackoff {
 
@@ -83,10 +79,7 @@ public final class ApiBackoff {
 		}
 	}
 
-	/**
-	 * Lifts a stop (the player may have fixed the key); called when the player opens a profile. A throttle pause
-	 * keeps running, since asking again straight away would only be throttled again.
-	 */
+	/** Lifts a stop (the key may have been fixed); called when a profile is opened. A throttle pause keeps running. */
 	public static synchronized void reset() {
 		stoppedCause = null;
 	}

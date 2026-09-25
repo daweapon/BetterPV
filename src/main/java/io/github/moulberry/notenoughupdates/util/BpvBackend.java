@@ -16,14 +16,13 @@ import java.time.Duration;
 import java.util.Base64;
 
 /**
- * Client for the Better PV backend (see {@code backend/} in the repo), which proxies the key-protected Hypixel
- * endpoints so players don't need their own API key.
+ * Client for the Better PV backend ({@code backend/}), which proxies the key-protected Hypixel endpoints so
+ * players don't need their own key.
  *
- * <p>Authentication uses the account's Mojang-certified profile key pair (the one vanilla uses for chat
- * signing): we sign a timestamped message with the private key and send it along with the public key and
- * Mojang's signature of it, which the backend can check offline. The key pair comes from the {@link KeySource}
- * the client entrypoint installs, since this source set can't see client classes. The backend's token is cached
- * here until shortly before it expires.
+ * Login uses the account's Mojang-certified profile key pair (the one used for chat signing): a timestamped
+ * message signed with the private key is sent with the public key and Mojang's signature, which the backend
+ * checks offline. The key pair comes from the {@link KeySource} the client entrypoint installs. The backend's
+ * token is cached until shortly before it expires.
  */
 public class BpvBackend {
 	/** The deployed Worker (see {@code backend/README.md}). Can be overridden with {@code "backendUrl"} in config.json. */
@@ -70,8 +69,8 @@ public class BpvBackend {
 	}
 
 	/**
-	 * Returns a valid backend token, logging in first if needed. Blocks on network calls, so only call this off
-	 * the render thread.
+	 * Returns a valid backend token, logging in first if needed. Blocks on the network, so keep it off the
+	 * render thread.
 	 */
 	public static synchronized String getToken() throws IOException {
 		// Refresh a minute early so a token never expires mid-request.

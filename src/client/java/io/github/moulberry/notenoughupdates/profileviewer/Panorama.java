@@ -30,34 +30,16 @@ import net.minecraft.resources.Identifier;
 import java.util.HashMap;
 
 /**
- * Port of the Forge 1.8.9 {@code Panorama} background renderer used behind the player's location art in the
- * profile viewer's basic page.
- *
- * <p><b>TODO(fabric-port) — simplified, not a faithful port:</b> the original rendered a genuine rotating 3D
- * skybox cube (6 textured quads with a hand-rolled perspective projection, drawn straight into the current GL
- * viewport via {@code Tessellator}/{@code WorldRenderer} immediate-mode calls plus a manual framebuffer blit).
- * That whole rendering model is gone in 26.1.2: there is no per-widget viewport/projection override available
- * from {@code GuiGraphicsExtractor}, and the vanilla replacement ({@code net.minecraft.client.renderer.CubeMap})
- * only draws full-screen and expects a single pre-stitched cubemap texture + a hand-written GPU render pass
- * (vertex buffers, pipelines, uniforms) rather than 6 loose textures - reimplementing that whole pipeline for a
- * small inset panel was out of scope for this pass. Instead, this draws a single static face of the panorama
- * (the "front" face, index 0) as a flat textured rect covering the requested area, with the {@code angle}
- * parameter ignored. This keeps the call sites (and the "which panorama for this location" lookup/fallback logic)
- * unchanged so a real rotating panorama can be dropped in later without touching {@code BasicPage}/{@code PetsPage}.
+ * The location panorama behind the basic and pets pages. The 1.8.9 spinning skybox cube can't be drawn in a
+ * small inset any more, so this shows one static face.
  */
 public class Panorama {
 
 	private static final HashMap<String, Identifier[]> panoramasMap = new HashMap<>();
 
 	/**
-	 * @return {@code "day"} or {@code "night"}, for the {@code identifier} passed to {@link #getPanoramasForLocation}.
-	 * TODO(fabric-port): the original derived this from the live in-game Skyblock clock (parsed off the
-	 * scoreboard sidebar by {@code util.SBInfo}, which wasn't ported - see this class's own TODO on why the data
-	 * layer is out of scope here). There's no reliable, verified formula for computing Skyblock's in-game time
-	 * from a wall-clock timestamp alone available in this codebase to fall back to, so rather than guess at one
-	 * and risk being confidently wrong forever, this uses the player's real local time of day as an approximate
-	 * substitute - purely cosmetic (which of two background art variants to show), not used for anything
-	 * gameplay-relevant.
+	 * "day" or "night" for {@link #getPanoramasForLocation}. The real SkyBlock clock isn't available, so this
+	 * follows the player's local time of day. It only picks between two backgrounds.
 	 */
 	public static String currentDayNightIdentifier() {
 		int hour = java.time.LocalTime.now().getHour();
@@ -111,9 +93,7 @@ public class Panorama {
 		float zOffset,
 		Identifier[] panoramas
 	) {
-		// See the class TODO above: this is a static single-face placeholder, not the rotating 3D skybox the
-		// legacy renderer produced. angle/yOffset/zOffset are accepted (matching the old call signature used by
-		// BasicPage/PetsPage) but currently unused.
+		// Static single face, not the old rotating skybox. angle, yOffset and zOffset are unused.
 		Identifier texture = decodedTexture(panoramas[0]);
 		if (texture == null) {
 			graphics.fill(x, y, x + width, y + height, 0xff101014);
@@ -126,9 +106,8 @@ public class Panorama {
 	private static final HashMap<Identifier, Identifier> decodedTextures = new HashMap<>();
 
 	/**
-	 * The panorama art is JPEG (carried over from the original), but the texture manager only loads PNGs - it
-	 * rejects anything else with "Bad PNG Signature" and draws the missing-texture checkerboard. So the JPEG is
-	 * decoded once with ImageIO, copied into a NativeImage and registered as a DynamicTexture.
+	 * The art is JPEG but the texture manager only loads PNG (it draws the missing-texture checkerboard), so
+	 * it's decoded with ImageIO and registered as a DynamicTexture.
 	 */
 	private static Identifier decodedTexture(Identifier jpg) {
 		if (decodedTextures.containsKey(jpg)) return decodedTextures.get(jpg);

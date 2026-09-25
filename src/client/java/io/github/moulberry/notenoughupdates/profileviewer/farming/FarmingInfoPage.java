@@ -52,10 +52,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Main sub-page of the farming tab, as SkyBlockPv's {@code FarmingScreen}: the player's best farming gear, Jacob's
- * contests per crop, garden chips, and general information (copper, garden level, medals, Jacob's perks).
- */
+/** Main farming sub-page: best farming gear, Jacob's contests per crop, garden chips and general information. */
 public class FarmingInfoPage implements GuiProfileViewerPage {
 
 	private static final String[] ARMOR_PIECES = {"HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"};

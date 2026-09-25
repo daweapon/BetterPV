@@ -47,9 +47,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Main sub-page of the chocolate factory tab, as SkyBlockPv's {@code ChocolateFactoryScreen}: rabbit employees,
- * factory upgrades, general information, and rabbits found per rarity. Player data is {@code events.easter}; the
- * employees, rabbits, prestige and hitman costs come from SkyBlockPv's repo ({@code chocolate_factory.json}).
+ * Main chocolate factory sub-page: employees, upgrades, general information and rabbits per rarity. Player
+ * data is {@code events.easter}; costs are in {@code chocolate_factory.json}.
  */
 public class ChocolateInfoPage implements GuiProfileViewerPage {
 

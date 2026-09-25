@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Trophy Fish tab's second page (SkyBlockPv has a whole Fishing tab; here it sits beside the trophy table):
- * last catch, trophy rank, Dolphin pet progress, catch counts, festival sharks and sea creature kills.
+ * The Trophy Fish tab's second page: last catch, trophy rank, Dolphin pet progress, catch counts, festival
+ * sharks and sea creature kills.
  */
 final class FishingStats {
 

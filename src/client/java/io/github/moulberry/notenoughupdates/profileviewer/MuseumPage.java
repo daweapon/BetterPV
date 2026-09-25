@@ -56,15 +56,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * "Museum" tab, following SkyBlockPv's museum screens: one category per museum section, picked with the buttons down
- * the left side of the window, each a grid of its items with a search box and a filter. Donated items show as the
- * player donated them (an armor set shows its first piece; click it to see the whole set), missing ones as gray dye,
- * or lime dye when a better version (a "parent") was donated instead. The Special category shows the player's
- * special donations.
+ * The Museum tab, after SkyBlockPv: one category per museum section, each a grid with a search box and filter.
+ * Donated items show as donated (an armor set shows its first piece), missing ones as gray dye, and ones
+ * covered by a better version (a "parent") as lime dye.
  *
- * <p>The item lists, armor sets and parents come from the NEU repo ({@code constants/museum.json}), which SkyBlockPv
- * builds from Hypixel's item list; the player's museum is {@code v2/skyblock/museum} (see
- * {@link ProfileViewer.Profile#getMuseumInfo}).
+ * Item lists, sets and parents come from {@code constants/museum.json}; the museum data is
+ * {@code v2/skyblock/museum} (see {@link ProfileViewer.Profile#getMuseumInfo}).
  */
 public class MuseumPage implements GuiProfileViewerPage {
 
@@ -101,8 +98,8 @@ public class MuseumPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * One museum slot. {@code pieces} lists an armor set's repo items (empty for other items); {@code donated} is
-	 * what the player donated (null when missing); {@code parent} is the donated better version, if any.
+	 * One museum slot: {@code pieces} is an armor set's repo items, {@code donated} what the player donated (null
+	 * if missing), {@code parent} the donated better version if any.
 	 */
 	private record Entry(
 		String id, List<String> pieces, List<JsonObject> donated, boolean borrowing, long donatedAt, String parent,
@@ -650,10 +647,7 @@ public class MuseumPage implements GuiProfileViewerPage {
 		return WordUtils.capitalizeFully(id.replace('_', ' '));
 	}
 
-	/**
-	 * The SkyBlock XP the player's museum is worth: each item in {@code itemToXp} they donated, or whose better
-	 * version ("parent") they donated. Null-safe on a missing repo constant (0).
-	 */
+	/** SkyBlock XP the museum is worth: each item in {@code itemToXp} donated, or whose parent was donated. */
 	public static int experience(JsonObject museum) {
 		if (Constants.MUSEUM == null || !(Constants.MUSEUM.get("itemToXp") instanceof JsonObject xp)) return 0;
 		JsonObject donatedItems = museum.get("items") instanceof JsonObject object ? object : new JsonObject();

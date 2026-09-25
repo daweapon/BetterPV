@@ -45,13 +45,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Right-clicking a player name in the chat opens their profile, while on SkyBlock. Right click is used because
- * left click is already taken by clickable chat text such as the friends list.
+ * Right-click a player name in chat to open their profile, while on SkyBlock. Left click is left alone since
+ * clickable chat text (the friends list) uses it.
  *
- * <p>Vanilla only hit-tests chat text that carries a click event, and plain names (guild chat, most messages)
- * have none. So the chat lines are run through vanilla's own click-target finder with every name tagged with a
- * click event holding that name; the name under the cursor is then read back from the result. Names also get a
- * hover hint as messages arrive.
+ * Vanilla only hit-tests text that has a click event, so the chat lines are run through its click finder with
+ * every name tagged, and the name under the cursor is read back from the result.
  */
 public class ChatProfileClick {
 	public static void register() {
@@ -128,9 +126,8 @@ public class ChatProfileClick {
 	}
 
 	/**
-	 * Whether text[start, end) is a player name: a valid username that is either named in the hover text Hypixel
-	 * put on it (friends list, public chat), or written like a sender or a join/leave/location line. Rank and level
-	 * brackets such as "[MVP+]" are skipped.
+	 * Whether text[start, end) is a player name: a valid username named in the hover text, or written like a
+	 * sender or a join/leave/location line. Rank and level brackets like "[MVP+]" are skipped.
 	 */
 	private static boolean isName(String text, int start, int end, String hover) {
 		int length = end - start;
@@ -200,8 +197,8 @@ public class ChatProfileClick {
 	}
 
 	/**
-	 * Hypixel writes colours as legacy section-sign codes inside the text. Names are split out of that text, and a
-	 * code cut off from the text it colours would print as a stray letter, so the codes become real styles first.
+	 * Hypixel puts legacy section-sign colour codes in the text. Cutting a name out of that would leave a stray
+	 * letter, so the codes become real styles first.
 	 */
 	private static void splitLegacyCodes(String string, Style base, List<String> texts, List<Style> styles) {
 		Style current = base;

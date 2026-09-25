@@ -55,10 +55,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * "Attributes" sub-page of the foraging tab, as SkyBlockPv's {@code AttributeScreen}: every hunting shard grouped by
- * rarity, tinted by how far its attribute has been syphoned, with a search box and a filter. Shards, their items
- * and the syphon table come from the NEU repo ({@code constants/attribute_shards.json}); the player's data is
- * {@code attributes.stacks} (syphoned) and {@code shards.owned}.
+ * The attributes sub-page: every hunting shard by rarity, tinted by how far it's been syphoned, with search
+ * and a filter. Shards come from {@code constants/attribute_shards.json}; player data is
+ * {@code attributes.stacks} and {@code shards.owned}.
  */
 public class AttributesPage implements GuiProfileViewerPage {
 
@@ -81,8 +80,8 @@ public class AttributesPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * One attribute; {@code rarity} is -1 for an attribute the repo doesn't know. {@code unlocked} is whether the
-	 * player has ever had its shard or syphoned it.
+	 * One attribute; {@code rarity} is -1 if the repo doesn't know it. {@code unlocked} means the player has had
+	 * its shard or syphoned it.
 	 */
 	private record Shard(
 		String id, String internalName, String name, String shardName, String shardId, int rarity, boolean unconsumable,

@@ -49,9 +49,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * "Mining Gear" sub-page of the mining tab: the player's best mining armor, equipment, pickaxes/drills and chisel
- * from every inventory, plus how much Suspicious Scrap they hold. The item lists and the scoring used to pick the
- * "best" copy of each follow SkyBlockPv's {@code MiningGearScreen} (lists from its repo, {@code pv/gear/mining}).
+ * The Mining Gear sub-page: the best mining armor, equipment, pickaxes/drills and chisel from every inventory,
+ * and Suspicious Scrap held. Lists and scoring follow SkyBlockPv's {@code MiningGearScreen}.
  */
 public class MiningGearPage implements GuiProfileViewerPage {
 
@@ -225,8 +224,8 @@ public class MiningGearPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * The item with the highest tier ({@code tierOf} its id, -1 when it isn't in the category). {@code items} is
-	 * sorted by score, so among equal tiers the first, highest-scoring copy is kept.
+	 * The item with the highest tier ({@code tierOf}, -1 if not in the category). {@code items} is sorted by
+	 * score, so ties keep the highest-scoring copy.
 	 */
 	private static JsonObject best(List<JsonObject> items, ToIntFunction<String> tierOf) {
 		JsonObject best = null;
@@ -242,9 +241,9 @@ public class MiningGearPage implements GuiProfileViewerPage {
 	}
 
 	/**
-	 * SkyBlockPv's mining item score: a point each for a recombobulator, reforge, fuel tank, engine and upgrade
-	 * module, the ultimate enchant's level, levels above V on other enchants, flawless/perfect gems (Jasper counts
-	 * from fine), Divan powder coating, and rarity above Rare (up to 3).
+	 * SkyBlockPv's mining score: a point each for recombobulator, reforge, fuel tank, engine and upgrade module,
+	 * the ultimate enchant's level, levels above V on other enchants, flawless/perfect gems (Jasper from fine),
+	 * Divan powder coating, and rarity above Rare (up to 3).
 	 */
 	private static int score(JsonObject item) {
 		String nbt = Utils.getElementAsString(item.get("nbttag"), "");

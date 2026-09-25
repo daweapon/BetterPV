@@ -43,9 +43,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Heart of the Mountain / Heart of the Forest perk trees as SkyBlockPv draws them: the node layouts bundled in
- * {@code skill_trees.json} (from its repo) and its vanilla items for each node state. Used by the Loadouts tab and
- * the Foraging tab's HotF sub-page.
+ * HOTM and HOTF perk trees as SkyBlockPv draws them, from {@code skill_trees.json}. Used by the Loadouts tab
+ * and the Foraging tab's HotF sub-page.
  */
 public final class SkillTreeView {
 
@@ -115,10 +114,8 @@ public final class SkillTreeView {
 	}
 
 	/**
-	 * Draws the nodes of {@code tree} for tree slot {@code slot}, the bottom row at the bottom. Each node is a
-	 * {@code cell - 1} square background {@code cell} pixels apart.
-	 *
-	 * @return the hovered node's tooltip, or null
+	 * Draws the nodes of {@code tree} for slot {@code slot}, bottom row at the bottom, each a {@code cell - 1}
+	 * square {@code cell} pixels apart. Returns the hovered node's tooltip, or null.
 	 */
 	public static List<String> drawNodes(
 		GuiGraphicsExtractor graphics, Font font, Tree tree, JsonObject profileInfo, int slot, int gridX, int gridY, int cell,

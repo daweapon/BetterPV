@@ -48,9 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * "Composter" sub-page of the farming tab, as SkyBlockPv's {@code ComposterScreen}: the garden's plots (unlocked,
- * or what the next one of each type costs) around the barn, what the composter holds, the greenhouse upgrades,
- * and the composter upgrades with their costs.
+ * The composter sub-page: garden plots around the barn, what the composter holds, greenhouse upgrades and
+ * composter upgrades with their costs.
  */
 public class ComposterPage implements GuiProfileViewerPage {
 

@@ -38,10 +38,7 @@ import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * "HotF Tree" sub-page of the foraging tab, as SkyBlockPv's {@code ForagingSkillTreeScreen}: buttons for the five
- * tree slots, the tier column, and the Heart of the Forest tree of the chosen slot.
- */
+/** The HotF Tree sub-page: buttons for the five tree slots, the tier column and the chosen slot's tree. */
 public class HotfPage implements GuiProfileViewerPage {
 
 	public static final int MAX_TIER = 8;

@@ -39,10 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/**
- * "Mutations" sub-page of the farming tab, as SkyBlockPv's {@code MutationScreen}: every greenhouse mutation grouped
- * by rarity, and whether the player has discovered and analyzed it ({@code garden_player_data}).
- */
+/** The mutations sub-page: every greenhouse mutation by rarity, and whether it was discovered and analyzed. */
 public class MutationsPage extends GroupedGridPage<MutationsPage.Mutation> {
 
 	private static final String[] FILTERS = {"All", "Undiscovered", "Discovered", "Discovered (not analyzed)", "Analyzed"};

@@ -36,11 +36,7 @@ import net.minecraft.world.level.block.Blocks;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Port of the Forge 1.8.9 {@code BingoPage} ("Bingo" tab: personal/community goal grid). Unlike most of the
- * other newly-ported pages, every item icon here is a real vanilla item (paper/dye/iron-and-emerald blocks), so
- * no {@code jsonToStack} fallback is needed - this page ports essentially verbatim.
- */
+/** The Bingo tab: personal and community goal grid. */
 public class BingoPage implements GuiProfileViewerPage {
 
 	private static final Identifier BINGO_GUI_TEXTURE = Identifier.parse("betterpv:pv_bingo_tab.png");
