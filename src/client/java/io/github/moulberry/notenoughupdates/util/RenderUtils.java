@@ -143,6 +143,24 @@ public class RenderUtils {
 		graphics.text(font, str, Math.round(x - width / 2f), Math.round(y - font.lineHeight / 2f), opaque(colour == 0 ? 0xFFFFFF : colour), shadow);
 	}
 
+	/** The text as a Component with a rainbow that scrolls along it over time, one hue per character. */
+	public static Component rainbow(String plain, long timeMillis) {
+		net.minecraft.network.chat.MutableComponent out = Component.empty();
+		float offset = (timeMillis % 3000) / 3000f;
+		for (int i = 0; i < plain.length(); i++) {
+			int rgb = java.awt.Color.HSBtoRGB((offset + i * 0.09f) % 1f, 0.7f, 1f) & 0xFFFFFF;
+			out.append(Component.literal(String.valueOf(plain.charAt(i)))
+				.withStyle(style -> style.withColor(net.minecraft.network.chat.TextColor.fromRgb(rgb))));
+		}
+		return out;
+	}
+
+	/** {@link #drawStringCentered} for a rainbow-coloured, plain (no § codes) string. */
+	public static void drawRainbowCentered(GuiGraphicsExtractor graphics, String plain, Font font, float x, float y, boolean shadow, long timeMillis) {
+		Component text = rainbow(plain, timeMillis);
+		graphics.text(font, text, Math.round(x - font.width(text) / 2f), Math.round(y - font.lineHeight / 2f), opaque(0xFFFFFF), shadow);
+	}
+
 	public static void drawStringCenteredScaledMaxWidth(
 		GuiGraphicsExtractor graphics,
 		String str,

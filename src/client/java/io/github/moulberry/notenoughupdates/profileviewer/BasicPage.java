@@ -70,7 +70,7 @@ public class BasicPage implements GuiProfileViewerPage {
 	private static final ItemStack SOCIAL_STACK = Utils.createItemStack(Items.EMERALD, ChatFormatting.DARK_GREEN + "Social");
 
 	/** The SkyBlock-level icon current NEU uses (same skull texture). */
-	private static final ItemStack SKYBLOCK_LEVEL_SKULL = Utils.createSkull(
+	static final ItemStack SKYBLOCK_LEVEL_SKULL = Utils.createSkull(
 		"SkyBlock Level",
 		"152de44a-43a3-46e1-badc-66cca2793471",
 		"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODdkODg1YjMyYjBkZDJkNmI3ZjFiNTgyYTM0MTg2ZjhhNTM3M2M0NjU4OWEyNzM0MjMxMzJiNDQ4YjgwMzQ2MiJ9fX0="
@@ -92,12 +92,73 @@ public class BasicPage implements GuiProfileViewerPage {
 	private ProfilePlayerEntity playerEntity;
 	private String playerEntityFor;
 
+	private static final ItemStack HOME_STACK = Utils.createItemStack(Items.PAPER, ChatFormatting.GRAY + "Home");
+	private static final ItemStack LEVEL_STACK = Utils.createSkull(
+		ChatFormatting.GRAY + "Level",
+		"152de44a-43a3-46e1-badc-66cca2793471",
+		"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODdkODg1YjMyYjBkZDJkNmI3ZjFiNTgyYTM0MTg2ZjhhNTM3M2M0NjU4OWEyNzM0MjMxMzJiNDQ4YjgwMzQ2MiJ9fX0="
+	);
+
+	private final LevelPage levelPage;
+
 	public BasicPage(GuiProfileViewer instance) {
 		this.instance = instance;
+		this.levelPage = new LevelPage(instance);
+	}
+
+	/** The Home / Level buttons down the left edge, shared with the level-breakdown page. */
+	static void drawSideButtons(GuiGraphicsExtractor graphics, GuiProfileViewer instance, int mouseX, int mouseY) {
+		boolean second = GuiProfileViewer.onSecondPage;
+		// The unpressed button first, so the pressed one's wider edge draws over it.
+		LevelPage.drawSideButton(graphics, second ? 0 : 1, second ? HOME_STACK : LEVEL_STACK, false);
+		LevelPage.drawSideButton(graphics, second ? 1 : 0, second ? LEVEL_STACK : HOME_STACK, true);
+
+		int left = GuiProfileViewer.getGuiLeft() - 28;
+		int top = GuiProfileViewer.getGuiTop();
+		if (Utils.isWithinRect(mouseX, mouseY, left, top, 28, 28)) {
+			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Home");
+		} else if (Utils.isWithinRect(mouseX, mouseY, left, top + 28, 28, 28)) {
+			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Level");
+		}
+	}
+
+	/** Switches between the basic and level pages when a side button is clicked. */
+	static boolean clickedSideButtons(double mouseX, double mouseY, int mouseButton) {
+		if (mouseButton != 0) return false;
+		int left = GuiProfileViewer.getGuiLeft() - 28;
+		int top = GuiProfileViewer.getGuiTop();
+		boolean level;
+		if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top, 28, 28)) {
+			level = false;
+		} else if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top + 28, 28, 28)) {
+			level = true;
+		} else {
+			return false;
+		}
+		if (level != GuiProfileViewer.onSecondPage) RenderUtils.playPressSound();
+		GuiProfileViewer.onSecondPage = level;
+		return true;
+	}
+
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+		if (GuiProfileViewer.onSecondPage) return levelPage.mouseClicked(mouseX, mouseY, mouseButton);
+		if (clickedSideButtons(mouseX, mouseY, mouseButton)) return true;
+
+		// Clicking the SkyBlock level panel opens the level breakdown, as in NEU.
+		int guiLeft = GuiProfileViewer.getGuiLeft();
+		int guiTop = GuiProfileViewer.getGuiTop();
+		if (mouseButton == 0 && Utils.isWithinRect((int) mouseX, (int) mouseY, guiLeft + 128, guiTop + 49, 88, 64)) {
+			RenderUtils.playPressSound();
+			GuiProfileViewer.onSecondPage = true;
+			return true;
+		}
+		return false;
 	}
 
 	@Override
 	public void resetCache() {
+		levelPage.resetCache();
 		playerEntity = null;
 		playerEntityFor = null;
 	}
@@ -199,6 +260,12 @@ public class BasicPage implements GuiProfileViewerPage {
 		String profileId = GuiProfileViewer.getProfileId();
 		int guiLeft = GuiProfileViewer.getGuiLeft();
 		int guiTop = GuiProfileViewer.getGuiTop();
+
+		if (GuiProfileViewer.onSecondPage) {
+			levelPage.drawPage(graphics, mouseX, mouseY, partialTicks);
+			return;
+		}
+		drawSideButtons(graphics, instance, mouseX, mouseY);
 
 		String location = null;
 		JsonObject status = profile.getPlayerStatus();
@@ -375,7 +442,7 @@ public class BasicPage implements GuiProfileViewerPage {
 	/**
 	 * SkyBlock level (100 XP per level, from leveling.experience), laid out as in current NEU's BasicPage: the
 	 * coloured level number over the SkyBlock-level skull (both 1.5x), then "n/100" and the progress bar, inside
-	 * the middle box of pv_basic.png. (NEU also opens a level-breakdown page when this is clicked; not ported.)
+	 * the middle box of pv_basic.png. (Clicking it opens the level-breakdown page, {@link LevelPage}.)
 	 */
 	private void drawSkyblockLevel(
 		GuiGraphicsExtractor graphics, JsonObject profileInfo, int guiLeft, int guiTop, int mouseX, int mouseY
@@ -403,7 +470,12 @@ public class BasicPage implements GuiProfileViewerPage {
 		RenderUtils.drawStringCentered(graphics, colour.toString() + level, font, 0, 0, true, 0);
 		graphics.pose().popMatrix();
 
-		instance.renderBar(graphics, sbLevelX - 30, sbLevelY + 30, 80, progress / 100f);
+		// The bar turns rainbow at the level cap.
+		if (experience >= LevelPage.MAX_EXPERIENCE) {
+			instance.renderGoldBar(graphics, sbLevelX - 30, sbLevelY + 30, 80);
+		} else {
+			instance.renderBar(graphics, sbLevelX - 30, sbLevelY + 30, 80, progress / 100f);
+		}
 		graphics.pose().pushMatrix();
 		graphics.pose().translate(sbLevelX - 30, sbLevelY + 20);
 		graphics.pose().scale(0.9f, 0.9f);

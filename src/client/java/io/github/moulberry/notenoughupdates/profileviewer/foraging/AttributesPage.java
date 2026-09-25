@@ -439,6 +439,18 @@ public class AttributesPage implements GuiProfileViewerPage {
 		return level;
 	}
 
+	/** The sum of the player's attribute levels (each shard's level out of 10) and the sum if all were maxed. */
+	public static int[] totalLevels(JsonObject profileInfo) {
+		int levels = 0;
+		int max = 0;
+		for (Shard shard : load(profileInfo)) {
+			if (shard.max() <= 0) continue;
+			levels += level(shard.rarity(), shard.syphoned());
+			max += 10;
+		}
+		return new int[]{levels, max};
+	}
+
 	private static List<Shard> load(JsonObject profileInfo) {
 		Map<String, Integer> stacks = new HashMap<>();
 		if (Utils.getElement(profileInfo, "attributes.stacks") instanceof JsonObject object) {

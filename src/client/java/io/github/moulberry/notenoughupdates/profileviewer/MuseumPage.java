@@ -625,18 +625,48 @@ public class MuseumPage implements GuiProfileViewerPage {
 		return WordUtils.capitalizeFully(id.replace('_', ' '));
 	}
 
-	private void load(JsonObject museum) {
-		ProfileViewer.Profile profile = GuiProfileViewer.getProfile();
+	/**
+	 * The SkyBlock XP the player's museum is worth: each item in {@code itemToXp} they donated, or whose better
+	 * version ("parent") they donated. Null-safe on a missing repo constant (0).
+	 */
+	public static int experience(JsonObject museum) {
+		if (Constants.MUSEUM == null || !(Constants.MUSEUM.get("itemToXp") instanceof JsonObject xp)) return 0;
 		JsonObject donatedItems = museum.get("items") instanceof JsonObject object ? object : new JsonObject();
+		Map<String, String> parents = parentsOf();
+		int total = 0;
+		for (Map.Entry<String, JsonElement> entry : xp.entrySet()) {
+			if (donatedItems.has(entry.getKey()) || donatedParent(entry.getKey(), parents, donatedItems) != null) {
+				total += entry.getValue().getAsInt();
+			}
+		}
+		return total;
+	}
 
-		// museum.json maps each item to the lower item it also counts as ("children"); SkyBlockPv calls the
-		// better item the lower one's parent.
+	/** The SkyBlock XP a full museum is worth. */
+	public static int maxExperience() {
+		if (Constants.MUSEUM == null || !(Constants.MUSEUM.get("itemToXp") instanceof JsonObject xp)) return 0;
+		int total = 0;
+		for (JsonElement value : xp.asMap().values()) total += value.getAsInt();
+		return total;
+	}
+
+	/** museum.json maps each item to the lower item it also counts as ("children"); the better item is the lower one's parent. */
+	private static Map<String, String> parentsOf() {
 		Map<String, String> parents = new HashMap<>();
 		if (Utils.getElement(Constants.MUSEUM, "children") instanceof JsonObject children) {
 			for (Map.Entry<String, JsonElement> child : children.entrySet()) {
 				parents.put(child.getValue().getAsString(), child.getKey());
 			}
 		}
+		return parents;
+	}
+
+	private void load(JsonObject museum) {
+		ProfileViewer.Profile profile = GuiProfileViewer.getProfile();
+		JsonObject donatedItems = museum.get("items") instanceof JsonObject object ? object : new JsonObject();
+
+		// SkyBlockPv calls the better item the lower one's parent.
+		Map<String, String> parents = parentsOf();
 
 		for (Category each : CATEGORIES) {
 			if (each == Category.SPECIAL) continue;

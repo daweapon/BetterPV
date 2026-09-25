@@ -26,6 +26,7 @@ The first time you start the game, Better PV downloads the NotEnoughUpdates item
 
 - **NotEnoughUpdates.** Better PV is a port of the Profile Viewer from [NotEnoughUpdates](https://github.com/NotEnoughUpdates/NotEnoughUpdates), created by Moulberry and developed by the [NotEnoughUpdates contributors](https://github.com/NotEnoughUpdates/NotEnoughUpdates/graphs/contributors) for Forge 1.8.9. Most of the profile viewer's logic, layouts and textures are their work. Better PV brings it to modern Fabric, adapts it to Hypixel's current API and SkyBlock updates, and leaves out NEU's other features. It also uses NEU's community-maintained [item repo](https://github.com/NotEnoughUpdates/NotEnoughUpdates-REPO) for item, pet, bestiary and HOTM data. Their original copyright notices are kept in every ported source file.
 - **SkyBlockPv.** Portions of this code are from the [SkyBlockPv](https://github.com/meowdding/skyblock-pv) mod.
+- **SkyBlock level task values.** The per-task SkyBlock XP in `sblevel_tasks.json` (Level page) comes from the Hypixel wiki's SkyBlock Levels tables, via the community dataset [SkyblockXP-BAZALRIGHT-](https://github.com/8Doc/SkyblockXP-BAZALRIGHT-) by 8Doc.
 - **Hypixel SkyBlock Resource Pack.** The trophy fish icons in `assets/hypixel_skyblock` are from the official SkyBlock Resource Pack, copyright Hypixel Inc. They are bundled free of charge under the pack's [license](src/main/resources/assets/hypixel_skyblock/LICENSE), which lets Hypixel-related apps use its assets. Better PV is not endorsed by Hypixel.
 
 ## License

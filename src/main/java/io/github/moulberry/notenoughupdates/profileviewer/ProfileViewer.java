@@ -1235,6 +1235,9 @@ public class ProfileViewer {
 					if (profile.has("game_mode")) {
 						profileInfo.add("game_mode", profile.get("game_mode"));
 					}
+					if (profile.has("community_upgrades")) {
+						profileInfo.add("community_upgrades", profile.get("community_upgrades"));
+					}
 					profileMap.put(profileName, profileInfo);
 					return profileInfo;
 				}

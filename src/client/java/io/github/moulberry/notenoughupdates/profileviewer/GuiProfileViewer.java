@@ -103,6 +103,8 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public static final java.text.NumberFormat numberFormat = java.text.NumberFormat.getInstance(Locale.US);
 
 	public static ProfileViewerPage currentPage = ProfileViewerPage.BASIC;
+	/** Whether the Basic tab is showing its level-breakdown page (LevelPage) instead of the overview. */
+	public static boolean onSecondPage = false;
 	private static int guiLeft;
 	private static int guiTop;
 	private static ProfileViewer.Profile profile;
@@ -120,7 +122,8 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public List<String> tooltipToDisplay = null;
 	private boolean profileDropdownSelected = false;
 	private boolean showBingoPage;
-	private final String initialPlayerName;
+	private String initialPlayerName;
+	private boolean historyRecorded;
 	private final Map<String, ItemStack> historyHeads = new HashMap<>();
 	private static final int HISTORY_BUTTON_SIZE = 28;
 	private static final ItemStack LOADING_HISTORY_HEAD = new ItemStack(Items.PLAYER_HEAD);
@@ -135,7 +138,11 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			name = profile.getHypixelProfile().get("displayname").getAsString();
 		}
 		this.initialPlayerName = name;
-		if (profile != null && !name.isEmpty()) BpvConfig.addProfileHistory(profile.getUuid(), name);
+		// The player's name can still be loading here; extractRenderState records them once it arrives.
+		if (profile != null && !name.isEmpty()) {
+			BpvConfig.addProfileHistory(profile.getUuid(), name);
+			historyRecorded = true;
+		}
 
 		if (currentPage == ProfileViewerPage.LOADING) {
 			currentPage = ProfileViewerPage.BASIC;
@@ -270,6 +277,16 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		currentTime = System.currentTimeMillis();
 		if (startTime == 0) startTime = currentTime;
+
+		if (!historyRecorded && profile != null && profile.getHypixelProfile() != null) {
+			String loadedName = Utils.getElementAsString(profile.getHypixelProfile().get("displayname"), "");
+			if (!loadedName.isEmpty()) {
+				historyRecorded = true;
+				initialPlayerName = loadedName;
+				BpvConfig.addProfileHistory(profile.getUuid(), loadedName);
+				if (playerNameTextField != null && playerNameTextField.getValue().isEmpty()) playerNameTextField.setValue(loadedName);
+			}
+		}
 
 		ProfileViewerPage page = currentPage;
 		if (profile == null) {
