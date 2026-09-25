@@ -344,16 +344,18 @@ public class BasicPage implements GuiProfileViewerPage {
 		long networth = io.github.moulberry.notenoughupdates.util.BpvConfig.isHideNetWorth()
 			? -1 : profile.getNetWorthInBackground(profileId);
 		if (networth > 0) {
-			RenderUtils.drawStringCentered(
+			// Scaled down when a huge total would spill out of the panel.
+			RenderUtils.drawStringCenteredScaledMaxWidth(
 				graphics,
 				ChatFormatting.GREEN + "Net Worth: " + ChatFormatting.GOLD + GuiProfileViewer.numberFormat.format(networth),
 				fr,
 				guiLeft + 63,
 				guiTop + 38,
 				true,
+				118,
 				0
 			);
-			int labelWidth = fr.width("Net Worth: " + GuiProfileViewer.numberFormat.format(networth));
+			int labelWidth = Math.min(118, fr.width("Net Worth: " + GuiProfileViewer.numberFormat.format(networth)));
 			if (Utils.isWithinRect(mouseX, mouseY, guiLeft + 63 - labelWidth / 2, guiTop + 33, labelWidth, fr.lineHeight + 2)) {
 				instance.tooltipToDisplay = networthTooltip(profile.getNetWorthBreakdown(profileId), networth);
 			}
