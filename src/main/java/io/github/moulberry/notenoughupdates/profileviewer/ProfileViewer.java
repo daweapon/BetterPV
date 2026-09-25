@@ -670,19 +670,46 @@ public class ProfileViewer {
 		public float totalXp;
 	}
 
+	/**
+	 * A concurrent map that, like the HashMap these caches used to be, accepts a null key (the profile name is null
+	 * until a profile is picked) and ignores a null value.
+	 */
+	private static final class NullKeyMap<V> extends ConcurrentHashMap<String, V> {
+		private static String key(Object key) {
+			return key == null ? "" : (String) key;
+		}
+
+		@Override
+		public V get(Object key) {
+			return super.get(key(key));
+		}
+
+		@Override
+		public boolean containsKey(Object key) {
+			return super.containsKey(key(key));
+		}
+
+		@Override
+		public V put(String key, V value) {
+			return value == null ? super.remove(key(key)) : super.put(key(key), value);
+		}
+	}
+
 	public class Profile {
 
 		private final String uuid;
-		private final Map<String, JsonObject> profileMap = new ConcurrentHashMap<>();
-		private final Map<String, JsonObject> petsInfoMap = new ConcurrentHashMap<>();
+		private final Map<String, JsonObject> profileMap = new NullKeyMap<>();
+		private final Map<String, JsonObject> petsInfoMap = new NullKeyMap<>();
 		private final HashMap<String, List<JsonObject>> coopProfileMap = new HashMap<>();
-		private final Map<String, Map<String, Level>> skyblockInfoCache = new ConcurrentHashMap<>();
-		private final Map<String, JsonObject> inventoryCacheMap = new ConcurrentHashMap<>();
-		private final Map<String, JsonObject> collectionInfoMap = new ConcurrentHashMap<>();
+		private final Map<String, Map<String, Level>> skyblockInfoCache = new NullKeyMap<>();
+		private final Map<String, JsonObject> inventoryCacheMap = new NullKeyMap<>();
+		private final Map<String, JsonObject> collectionInfoMap = new NullKeyMap<>();
 		private final List<String> profileNames = new ArrayList<>();
-		private final Map<String, PlayerStats.Stats> stats = new ConcurrentHashMap<>();
-		private final Map<String, PlayerStats.Stats> passiveStats = new ConcurrentHashMap<>();
-		private final Map<String, Long> networth = new ConcurrentHashMap<>();
+		private final Map<String, PlayerStats.Stats> stats = new NullKeyMap<>();
+		private final Map<String, PlayerStats.Stats> passiveStats = new NullKeyMap<>();
+		private final Map<String, Long> networth = new NullKeyMap<>();
+		/** Net worth by source (inventory name, pets, sacks, museum, bank, purse) per profile, in draw order. */
+		private final Map<String, Map<String, Long>> networthBreakdown = new NullKeyMap<>();
 		private final AtomicBoolean updatingSkyblockProfilesState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingGuildInfoState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingPlayerStatusState = new AtomicBoolean(false);
@@ -878,6 +905,13 @@ public class ProfileViewer {
 			return -1;
 		}
 
+		/** The net worth split by source, or an empty map until getNetWorth has worked it out. */
+		public Map<String, Long> getNetWorthBreakdown(String profileName) {
+			if (profileName == null) profileName = latestProfile;
+			Map<String, Long> breakdown = profileName == null ? null : networthBreakdown.get(profileName);
+			return breakdown == null ? Map.of() : breakdown;
+		}
+
 		public long getNetWorth(String profileName) {
 			if (profileName == null) profileName = latestProfile;
 			if (networth.get(profileName) != null) return networth.get(profileName);
@@ -893,7 +927,12 @@ public class ProfileViewer {
 			HashMap<String, Long> mostExpensiveInternal = new HashMap<>();
 
 			long networth = 0;
+			Map<String, Long> breakdown = new LinkedHashMap<>();
+			boolean wardrobeFromLoadout = Utils.getElementAsBoolean(inventoryInfo.get("wardrobe_from_loadout"), false);
 			for (Map.Entry<String, JsonElement> entry : inventoryInfo.entrySet()) {
+				// The wardrobe was rebuilt from these very items, so counting both would count each piece twice.
+				if (wardrobeFromLoadout && entry.getKey().equals("loadout_armor")) continue;
+				long before = networth;
 				if (entry.getValue().isJsonArray()) {
 					for (JsonElement element : entry.getValue().getAsJsonArray()) {
 						if (element != null && element.isJsonObject()) {
@@ -973,8 +1012,10 @@ public class ProfileViewer {
 						}
 					}
 				}
+				if (networth > before) breakdown.merge(entry.getKey(), networth - before, Long::sum);
 			}
 			JsonObject petsInfo = getPetsInfo(profileName);
+			long beforePets = networth;
 			if (petsInfo != null && petsInfo.has("pets")) {
 				if (petsInfo.get("pets").isJsonArray()) {
 					JsonArray pets = petsInfo.get("pets").getAsJsonArray();
@@ -1000,6 +1041,9 @@ public class ProfileViewer {
 				}
 			}
 
+			if (networth > beforePets) breakdown.put("pets", networth - beforePets);
+
+			long beforeSacks = networth;
 			JsonElement sacksElement = Utils.getElement(profileInfo, "sacks_counts");
 			if (sacksElement instanceof JsonObject sacks) {
 				for (Map.Entry<String, JsonElement> entry : sacks.entrySet()) {
@@ -1009,6 +1053,9 @@ public class ProfileViewer {
 				}
 			}
 
+			if (networth > beforeSacks) breakdown.put("sacks", networth - beforeSacks);
+
+			long beforeMuseum = networth;
 			// Match SkyBlockPV's museum category: donated and special items count, borrowed items do not.
 			if (!museumInfo.has("__error")) {
 				JsonElement donatedElement = museumInfo.get("items");
@@ -1030,9 +1077,13 @@ public class ProfileViewer {
 			long bankBalance = (long) Utils.getElementAsDouble(Utils.getElement(profileInfo, "banking.balance"), 0);
 			long purseBalance = (long) Utils.getElementAsDouble(Utils.getElement(profileInfo, "coin_purse"), 0);
 
+			if (networth > beforeMuseum) breakdown.put("museum", networth - beforeMuseum);
+			if (bankBalance > 0) breakdown.put("bank", bankBalance);
+			if (purseBalance > 0) breakdown.put("purse", purseBalance);
 			networth += bankBalance + purseBalance;
 			if (networth == 0) return -1;
 
+			this.networthBreakdown.put(profileName, breakdown);
 			this.networth.put(profileName, networth);
 			return networth;
 		}
@@ -1318,6 +1369,7 @@ public class ProfileViewer {
 			inventoryCacheMap.clear();
 			collectionInfoMap.clear();
 			networth.clear();
+			networthBreakdown.clear();
 			// Museum and garden are kept once loaded, but a failed load is asked for again.
 			museumInfoMap.entrySet().removeIf(entry -> {
 				boolean failed = entry.getValue().has("__error");
@@ -1601,6 +1653,7 @@ public class ProfileViewer {
 					}
 				}
 				inventoryInfo.add("wardrobe_contents", wardrobe);
+				inventoryInfo.addProperty("wardrobe_from_loadout", true);
 			}
 
 			inventoryCacheMap.put(profileName, inventoryInfo);

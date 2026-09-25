@@ -64,6 +64,7 @@ public class Constants {
 	public static JsonObject HOPPITY;
 	public static JsonObject SBLEVELS;
 	public static JsonObject ESSENCESHOPS;
+	public static JsonObject SACKS;
 
 	private Constants() {
 	}
@@ -94,6 +95,7 @@ public class Constants {
 		HOPPITY = readConstant(repoLocation, "hoppity", gson);
 		SBLEVELS = readConstant(repoLocation, "sblevels", gson);
 		ESSENCESHOPS = readConstant(repoLocation, "essenceshops", gson);
+		SACKS = readConstant(repoLocation, "sacks", gson);
 	}
 
 	private static JsonObject readConstant(File repoLocation, String constant, Gson gson) {

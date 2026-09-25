@@ -152,10 +152,52 @@ public class TrophyFishPage implements GuiProfileViewerPage {
 		totalCount = 0;
 	}
 
+	private static final ItemStack TROPHY_BUTTON = Utils.createItemStack(net.minecraft.world.item.Items.FISHING_ROD, ChatFormatting.GRAY + "Trophy Fish");
+	private static final ItemStack FISHING_BUTTON = Utils.createItemStack(net.minecraft.world.item.Items.COD, ChatFormatting.GRAY + "Fishing");
+
+	/** The Trophy Fish / Fishing buttons down the left edge, like the Basic tab's. */
+	private void drawSideButtons(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		boolean fishing = GuiProfileViewer.onFishingPage;
+		// Fishing on top, Trophy Fish under it; the unpressed one first so the pressed one's wider edge draws over it.
+		io.github.moulberry.notenoughupdates.profileviewer.LevelPage.drawSideButton(graphics, fishing ? 1 : 0, fishing ? TROPHY_BUTTON : FISHING_BUTTON, false);
+		io.github.moulberry.notenoughupdates.profileviewer.LevelPage.drawSideButton(graphics, fishing ? 0 : 1, fishing ? FISHING_BUTTON : TROPHY_BUTTON, true);
+		int left = GuiProfileViewer.getGuiLeft() - 28;
+		int top = GuiProfileViewer.getGuiTop();
+		if (Utils.isWithinRect(mouseX, mouseY, left, top, 28, 28)) {
+			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Fishing");
+		} else if (Utils.isWithinRect(mouseX, mouseY, left, top + 28, 28, 28)) {
+			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Trophy Fish");
+		}
+	}
+
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+		if (mouseButton != 0) return false;
+		int left = GuiProfileViewer.getGuiLeft() - 28;
+		int top = GuiProfileViewer.getGuiTop();
+		boolean fishing;
+		if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top, 28, 28)) {
+			fishing = true;
+		} else if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top + 28, 28, 28)) {
+			fishing = false;
+		} else {
+			return false;
+		}
+		if (fishing != GuiProfileViewer.onFishingPage) RenderUtils.playPressSound();
+		GuiProfileViewer.onFishingPage = fishing;
+		return true;
+	}
+
 	@Override
 	public void drawPage(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		int guiLeft = GuiProfileViewer.getGuiLeft();
 		int guiTop = GuiProfileViewer.getGuiTop();
+
+		drawSideButtons(graphics, mouseX, mouseY);
+		if (GuiProfileViewer.onFishingPage) {
+			FishingStats.draw(instance, graphics, mouseX, mouseY);
+			return;
+		}
 
 		trophyFishList.clear();
 

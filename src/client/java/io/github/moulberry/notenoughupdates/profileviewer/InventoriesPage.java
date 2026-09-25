@@ -25,6 +25,7 @@ import com.google.gson.JsonObject;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.core.util.StringUtils;
 import io.github.moulberry.notenoughupdates.profileviewer.info.QuiverInfo;
+import io.github.moulberry.notenoughupdates.util.Constants;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
@@ -96,6 +97,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 		invNameToDisplayMap.put("wardrobe_contents", Utils.createItemStack(Items.LEATHER_CHESTPLATE, ChatFormatting.GRAY + "Wardrobe"));
 		invNameToDisplayMap.put("fishing_bag", Utils.createItemStack(Items.COD, ChatFormatting.GRAY + "Fishing Bag"));
 		invNameToDisplayMap.put("potion_bag", Utils.createItemStack(Items.POTION, ChatFormatting.GRAY + "Potion Bag"));
+		invNameToDisplayMap.put("sacks", Utils.createItemStack(Items.BUNDLE, ChatFormatting.GRAY + "Sacks"));
 	}
 
 	private final GuiProfileViewer instance;
@@ -121,6 +123,8 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	private JsonObject[] armorItems = null;
 	private JsonObject[] equipmentItems = null;
 	private String selectedInventory = "inv_contents";
+	/** The sack open in the Sacks view (its name in the repo's sacks.json), or null for the menu of sacks. */
+	private String openSack = null;
 	private int currentInventoryIndex = 0;
 	private int arrowCount = -1;
 	private int greenCandyCount = -1;
@@ -139,6 +143,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	public void resetCache() {
 		inventoryItems.clear();
 		resolvedIconCache.clear();
+		openSack = null;
 		bestWeapons = null;
 		bestRods = null;
 		armorItems = null;
@@ -297,6 +302,8 @@ public class InventoriesPage implements GuiProfileViewerPage {
 			String strToRender = "Inventory API not enabled!";
 			if (selectedInventory.equalsIgnoreCase("personal_vault_contents")) {
 				strToRender = "Personal Vault API not enabled!";
+			} else if (selectedInventory.equalsIgnoreCase("sacks")) {
+				strToRender = "No sacks data!";
 			} else if (selectedInventory.equalsIgnoreCase("backpack_contents")) {
 				strToRender = "Inventory API not enabled";
 				RenderUtils.drawStringCentered(
@@ -325,7 +332,12 @@ public class InventoriesPage implements GuiProfileViewerPage {
 			RenderUtils.text(graphics, instance.getFont(), ">", guiLeft + 320 + 4, staticSelectorHeight, 0xFFFFFF, true);
 		}
 
-		RenderUtils.text(graphics, instance.getFont(), invNameToDisplayMap.get(selectedInventory).getHoverName().getString(), x + 8, y + 6, 4210752, false);
+		RenderUtils.text(graphics, instance.getFont(), inventoryTitle(), x + 8, y + 6, 4210752, false);
+		if (selectedInventory.equals("sacks") && openSack != null) {
+			int backWidth = instance.getFont().width(BACK_TEXT);
+			boolean overBack = Utils.isWithinRect(mouseX, mouseY, x + 176 - 8 - backWidth, y + 4, backWidth, 11);
+			RenderUtils.text(graphics, instance.getFont(), BACK_TEXT, x + 176 - 8 - backWidth, y + 6, overBack ? 0x0000AA : 4210752, false);
+		}
 
 		JsonObject stackToRender = null;
 		int overlay = 0x64000000;
@@ -337,6 +349,9 @@ public class InventoriesPage implements GuiProfileViewerPage {
 				JsonObject item = inventory[yIndex][xIndex];
 
 				renderJsonItemSlotNoTooltip(graphics, item, x + 8 + xIndex * 18, y + 18 + yIndex * 18);
+				if (item != null && item.has("sack_count")) {
+					drawSackCount(graphics, item.get("sack_count").getAsLong(), x + 8 + xIndex * 18, y + 18 + yIndex * 18);
+				}
 
 				if (
 					search != null && !search.isEmpty() &&
@@ -359,6 +374,176 @@ public class InventoriesPage implements GuiProfileViewerPage {
 		if (stackToRender != null) {
 			instance.tooltipToDisplay = buildItemTooltip(stackToRender);
 		}
+	}
+
+	/** A sack's stored amount in the slot's bottom-right corner, shrunk so "1.2M" fits. */
+	private void drawSackCount(GuiGraphicsExtractor graphics, long count, int x, int y) {
+		String text = count >= 10_000 ? StringUtils.shortNumberFormat(count) : String.valueOf(count);
+		float scale = 0.6f;
+		graphics.pose().pushMatrix();
+		graphics.pose().translate(x + 17 - instance.getFont().width(text) * scale, y + 17 - instance.getFont().lineHeight * scale);
+		graphics.pose().scale(scale, scale);
+		RenderUtils.text(graphics, instance.getFont(), text, 0, 0, 0xFFFFFF, true);
+		graphics.pose().popMatrix();
+	}
+
+	private static final String OTHER_SACK = "Other";
+	/** Items newer than the repo's sacks.json, by the sack they go in. */
+	private static final Map<String, String> NEWER_SACK_ITEMS = Map.of(
+		"CRUNCHY_BUG", "Witch",
+		"ALL_IN_ALOE_FRAGMENT", "Mutations"
+	);
+	private static final String BACK_TEXT = "< Back";
+
+	/** Every item stored in a sack, with its amount under "sack_count" (not "count", which would draw the whole number over the icon). */
+	private List<JsonObject> storedSackItems() {
+		JsonObject profileInfo = GuiProfileViewer.getProfile().getProfileInformation(GuiProfileViewer.getProfileId());
+		List<JsonObject> items = new ArrayList<>();
+		List<String> unresolved = new ArrayList<>();
+		if (Utils.getElement(profileInfo, "sacks_counts") instanceof JsonObject sacks) {
+			for (Map.Entry<String, JsonElement> entry : sacks.entrySet()) {
+				long amount = Utils.getElementAsLong(entry.getValue(), 0);
+				if (amount <= 0) continue;
+				// The API writes dye as INK_SACK:2, the repo as INK_SACK-2.
+				String id = sackKey(entry.getKey());
+				JsonObject repo = repoItemForSackKey(id);
+				if (repo == null) unresolved.add(entry.getKey());
+				JsonObject item = repo != null ? repo.deepCopy() : new JsonObject();
+				if (repo == null) {
+					item.addProperty("internalname", id);
+					item.addProperty("itemid", "minecraft:paper");
+					item.addProperty("displayname", "§f" + org.apache.commons.lang3.text.WordUtils.capitalizeFully(id.replace('_', ' ')));
+				}
+				item.remove("count");
+				item.addProperty("sack_count", amount);
+				items.add(item);
+			}
+		}
+		if (!unresolved.isEmpty()) {
+			NotEnoughUpdates.LOGGER.info("Sacks: {} stored items have no repo item: {}", unresolved.size(), unresolved);
+		}
+		items.sort(java.util.Comparator.comparing(
+			item -> Utils.cleanColour(Utils.getElementAsString(item.get("displayname"), "")).toLowerCase(Locale.ROOT)));
+		return items;
+	}
+
+	/**
+	 * The repo item for a sack key. Runes are stored under keys that differ from the repo's "NAME_RUNE;tier", so a few
+	 * spellings are tried.
+	 */
+	private static JsonObject repoItemForSackKey(String id) {
+		Map<String, JsonObject> repo = NotEnoughUpdates.INSTANCE.manager.getItemInformation();
+		JsonObject exact = repo.get(id);
+		if (exact != null) return exact;
+		java.util.regex.Matcher tiered = java.util.regex.Pattern.compile("^(.+?)_(\\d+)$").matcher(id);
+		String base = id;
+		String tier = "1";
+		if (tiered.matches()) {
+			base = tiered.group(1);
+			tier = tiered.group(2);
+		}
+		List<String> candidates = new ArrayList<>();
+		candidates.add(id.replaceFirst("_(\\d+)$", ";$1"));
+		if (base.startsWith("RUNE_")) candidates.add(base.substring("RUNE_".length()) + "_RUNE;" + tier);
+		if (base.endsWith("_RUNE")) candidates.add(base + ";" + tier);
+		if (!base.contains("RUNE")) candidates.add(base + "_RUNE;" + tier);
+		for (String candidate : candidates) {
+			JsonObject found = repo.get(candidate);
+			if (found != null) return found;
+		}
+		return null;
+	}
+
+	private static String sackKey(String apiKey) {
+		return apiKey.replace(':', '-');
+	}
+
+	/** The stored items by sack, in the repo's sack order, then whatever no sack lists under "Other". Empty sacks are left out. */
+	private LinkedHashMap<String, List<JsonObject>> groupedSacks() {
+		Map<String, String> sackOfItem = new HashMap<>();
+		List<String> order = new ArrayList<>();
+		if (Constants.SACKS != null && Constants.SACKS.get("sacks") instanceof JsonObject sacks) {
+			for (Map.Entry<String, JsonElement> entry : sacks.entrySet()) {
+				order.add(entry.getKey());
+				if (entry.getValue() instanceof JsonObject sack && sack.get("contents") instanceof JsonArray contents) {
+					for (JsonElement id : contents) sackOfItem.putIfAbsent(sackKey(id.getAsString()), entry.getKey());
+				}
+			}
+		}
+		order.add(OTHER_SACK);
+		Map<String, List<JsonObject>> byName = new HashMap<>();
+		for (JsonObject item : storedSackItems()) {
+			String itemId = Utils.getElementAsString(item.get("internalname"), "");
+			String sack = sackOfItem.get(itemId);
+			if (sack == null) sack = NEWER_SACK_ITEMS.get(itemId);
+			// A mutation's fragment (ALL_IN_ALOE_FRAGMENT) goes with the mutation.
+			if (sack == null && itemId.endsWith("_FRAGMENT")) {
+				sack = "Mutations".equals(sackOfItem.get(itemId.substring(0, itemId.length() - "_FRAGMENT".length()))) ? "Mutations" : null;
+			}
+			// The repo lists no contents for the rune sack, so anything rune-like goes there.
+			if (sack == null) sack = itemId.contains("RUNE") ? "Rune" : OTHER_SACK;
+			byName.computeIfAbsent(sack, k -> new ArrayList<>()).add(item);
+		}
+		LinkedHashMap<String, List<JsonObject>> grouped = new LinkedHashMap<>();
+		for (String sack : order) {
+			if (byName.containsKey(sack)) grouped.put(sack, byName.get(sack));
+		}
+		return grouped;
+	}
+
+	/** The sack's own item (from the repo) as a menu slot; it carries "sack_name" and how much is inside. */
+	private JsonObject sackMenuItem(String name, List<JsonObject> contents) {
+		JsonObject item = null;
+		if (Utils.getElement(Constants.SACKS, "sacks." + name + ".item") instanceof JsonElement id && id.isJsonPrimitive()) {
+			JsonObject repo = NotEnoughUpdates.INSTANCE.manager.getItemInformation().get(id.getAsString());
+			if (repo != null) item = repo.deepCopy();
+		}
+		if (item == null) {
+			item = new JsonObject();
+			item.addProperty("internalname", "SACK_" + name.toUpperCase(Locale.ROOT).replace(' ', '_'));
+			item.addProperty("itemid", "minecraft:bundle");
+			item.addProperty("displayname", "§a" + name + " Sack");
+		}
+		item.remove("count");
+		item.addProperty("sack_name", name);
+		item.addProperty("sack_types", contents.size());
+		long total = 0;
+		for (JsonObject each : contents) total += each.get("sack_count").getAsLong();
+		item.addProperty("sack_total", total);
+		return item;
+	}
+
+	/** Chest pages of 54 slots for a list of items. */
+	private static JsonObject[][][] chestPages(List<JsonObject> items) {
+		if (items.isEmpty()) return new JsonObject[1][][];
+		int pageSize = 54;
+		JsonObject[][][] pages = new JsonObject[(items.size() - 1) / pageSize + 1][][];
+		for (int page = 0; page < pages.length; page++) {
+			int count = Math.min(pageSize, items.size() - page * pageSize);
+			JsonObject[][] rows = new JsonObject[(count + 8) / 9][9];
+			for (int i = 0; i < count; i++) rows[i / 9][i % 9] = items.get(page * pageSize + i);
+			pages[page] = rows;
+		}
+		return pages;
+	}
+
+	/** The menu of sacks, or the open sack's items. */
+	private JsonObject[][][] sackPages() {
+		LinkedHashMap<String, List<JsonObject>> grouped = groupedSacks();
+		if (openSack != null) {
+			List<JsonObject> contents = grouped.get(openSack);
+			if (contents != null) return chestPages(contents);
+			openSack = null;
+		}
+		List<JsonObject> menu = new ArrayList<>();
+		for (Map.Entry<String, List<JsonObject>> sack : grouped.entrySet()) menu.add(sackMenuItem(sack.getKey(), sack.getValue()));
+		return chestPages(menu);
+	}
+
+	/** The title of the chest being shown: the open sack, "Sacks" for the menu, else the inventory's own name. */
+	private String inventoryTitle() {
+		if (selectedInventory.equals("sacks") && openSack != null) return openSack + " Sack";
+		return invNameToDisplayMap.get(selectedInventory).getHoverName().getString();
 	}
 
 	/** Renders a slot's background + filler icon (if present) and, on hover, queues a full JSON-derived tooltip. */
@@ -420,6 +605,19 @@ public class InventoriesPage implements GuiProfileViewerPage {
 				tooltip.add(line.getAsString());
 			}
 		}
+		if (item.has("sack_name")) {
+			tooltip.add("");
+			tooltip.add(ChatFormatting.GRAY + "Item types: " + ChatFormatting.YELLOW + item.get("sack_types").getAsInt());
+			tooltip.add(ChatFormatting.GRAY + "Items stored: " + ChatFormatting.YELLOW +
+				GuiProfileViewer.numberFormat.format(item.get("sack_total").getAsLong()));
+			tooltip.add("");
+			tooltip.add(ChatFormatting.YELLOW + "Click to open!");
+		}
+		if (item.has("sack_count")) {
+			tooltip.add("");
+			tooltip.add(ChatFormatting.GRAY + "Stored: " + ChatFormatting.YELLOW +
+				GuiProfileViewer.numberFormat.format(item.get("sack_count").getAsLong()));
+		}
 		return tooltip;
 	}
 
@@ -460,6 +658,38 @@ public class InventoriesPage implements GuiProfileViewerPage {
 		return false;
 	}
 
+	/** Opens the clicked sack, or goes back from an open sack; true when the click was used. */
+	private boolean clickedSackSlot(JsonObject[][] inventory, double mouseX, double mouseY) {
+		int guiLeft = GuiProfileViewer.getGuiLeft();
+		int guiTop = GuiProfileViewer.getGuiTop();
+		int x = guiLeft + 320 - 176 / 2;
+		int y = guiTop + 101 - (inventory.length * 18 + 17 + 7) / 2;
+		if (openSack != null) {
+			int backWidth = instance.getFont().width(BACK_TEXT);
+			if (Utils.isWithinRect((int) mouseX, (int) mouseY, x + 176 - 8 - backWidth, y + 4, backWidth, 11)) {
+				RenderUtils.playPressSound();
+				openSack = null;
+				currentInventoryIndex = 0;
+				return true;
+			}
+			return false;
+		}
+		for (int row = 0; row < inventory.length; row++) {
+			if (inventory[row] == null) continue;
+			for (int column = 0; column < inventory[row].length; column++) {
+				JsonObject item = inventory[row][column];
+				if (item == null || !item.has("sack_name")) continue;
+				if (Utils.isWithinRect((int) mouseX, (int) mouseY, x + 8 + column * 18, y + 18 + row * 18, 16, 16)) {
+					RenderUtils.playPressSound();
+					openSack = item.get("sack_name").getAsString();
+					currentInventoryIndex = 0;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public void mouseReleased(double mouseX, double mouseY, int mouseButton) {
 		int guiLeft = GuiProfileViewer.getGuiLeft();
@@ -477,7 +707,10 @@ public class InventoriesPage implements GuiProfileViewerPage {
 				if (mouseX >= x && mouseX <= x + 16) {
 					if (mouseY >= y && mouseY <= y + 16) {
 						if (!selectedInventory.equals(entry.getKey())) RenderUtils.playPressSound();
+						// Clicking Sacks again goes back to the menu of sacks.
+						if (entry.getKey().equals("sacks") && selectedInventory.equals("sacks")) openSack = null;
 						selectedInventory = entry.getKey();
+						currentInventoryIndex = 0;
 						return;
 					}
 				}
@@ -494,6 +727,8 @@ public class InventoriesPage implements GuiProfileViewerPage {
 
 			JsonObject[][] inventory = inventories[currentInventoryIndex];
 			if (inventory == null) return;
+
+			if (selectedInventory.equals("sacks") && clickedSackSlot(inventory, mouseX, mouseY)) return;
 
 			int staticSelectorHeight = guiTop + 177;
 
@@ -524,6 +759,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 			case org.lwjgl.glfw.GLFW.GLFW_KEY_6, org.lwjgl.glfw.GLFW.GLFW_KEY_KP_6 -> "wardrobe_contents";
 			case org.lwjgl.glfw.GLFW.GLFW_KEY_7, org.lwjgl.glfw.GLFW.GLFW_KEY_KP_7 -> "fishing_bag";
 			case org.lwjgl.glfw.GLFW.GLFW_KEY_8, org.lwjgl.glfw.GLFW.GLFW_KEY_KP_8 -> "potion_bag";
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_9, org.lwjgl.glfw.GLFW.GLFW_KEY_KP_9 -> "sacks";
 			default -> null;
 		};
 		if (newSelection != null) {
@@ -621,6 +857,16 @@ public class InventoriesPage implements GuiProfileViewerPage {
 	}
 
 	private JsonObject[][][] getItemsForInventory(JsonObject inventoryInfo, String invName) {
+		if (invName.equals("sacks")) {
+			String key = openSack == null ? "sacks" : "sacks:" + openSack;
+			JsonObject[][][] cached = inventoryItems.get(key);
+			if (cached == null) {
+				cached = sackPages();
+				// sackPages may drop an open sack that no longer exists, so key by what it ended up showing.
+				inventoryItems.put(openSack == null ? "sacks" : "sacks:" + openSack, cached);
+			}
+			return cached;
+		}
 		if (inventoryItems.containsKey(invName)) return inventoryItems.get(invName);
 
 		JsonArray jsonInv = Utils.getElement(inventoryInfo, invName).getAsJsonArray();

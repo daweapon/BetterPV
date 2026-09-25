@@ -259,7 +259,7 @@ public class LevelPage implements GuiProfileViewerPage {
 	}
 
 	/** A pv_elements side button; {@code yIndex} is its slot down the left edge of the panel. */
-	static void drawSideButton(GuiGraphicsExtractor graphics, int yIndex, ItemStack itemStack, boolean pressed) {
+	public static void drawSideButton(GuiGraphicsExtractor graphics, int yIndex, ItemStack itemStack, boolean pressed) {
 		int x = GuiProfileViewer.getGuiLeft() - 28;
 		int y = GuiProfileViewer.getGuiTop() + yIndex * 28;
 

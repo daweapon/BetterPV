@@ -105,6 +105,10 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public static ProfileViewerPage currentPage = ProfileViewerPage.BASIC;
 	/** Whether the Basic tab is showing its level-breakdown page (LevelPage) instead of the overview. */
 	public static boolean onSecondPage = false;
+	/** Whether the Basic tab is showing the Crimson Isle page (CrimsonIslePage). */
+	public static boolean onCrimsonPage = false;
+	/** Whether the Trophy Fish tab is showing its fishing-stats page instead of the trophy table (it opens first). */
+	public static boolean onFishingPage = true;
 	private static int guiLeft;
 	private static int guiTop;
 	private static ProfileViewer.Profile profile;
@@ -880,7 +884,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		PETS(Items.BONE, "Pets", ChatFormatting.GREEN),
 		MINING(Items.IRON_PICKAXE, "Heart of the Mountain", ChatFormatting.DARK_PURPLE),
 		BINGO(Items.FILLED_MAP, "Bingo", ChatFormatting.DARK_RED),
-		TROPHY_FISH(Items.FISHING_ROD, "Trophy Fish", ChatFormatting.DARK_AQUA),
+		TROPHY_FISH(Items.FISHING_ROD, "Fishing", ChatFormatting.DARK_AQUA),
 		BESTIARY(Items.IRON_SWORD, "Bestiary", ChatFormatting.RED),
 		// Tabs from here down don't exist in NEU; they follow SkyBlockPv's tab set and are placeholders for now.
 		// Portions of this code are from the SkyBlockPv mod.

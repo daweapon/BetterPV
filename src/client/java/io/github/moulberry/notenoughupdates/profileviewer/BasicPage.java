@@ -99,49 +99,66 @@ public class BasicPage implements GuiProfileViewerPage {
 		"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODdkODg1YjMyYjBkZDJkNmI3ZjFiNTgyYTM0MTg2ZjhhNTM3M2M0NjU4OWEyNzM0MjMxMzJiNDQ4YjgwMzQ2MiJ9fX0="
 	);
 
+	private static final ItemStack CRIMSON_STACK = withName(CrimsonIslePage.KUUDRA_KEYS[4].copy(), ChatFormatting.GRAY + "Crimson Isle");
+
 	private final LevelPage levelPage;
+	private final CrimsonIslePage crimsonPage;
 
 	public BasicPage(GuiProfileViewer instance) {
 		this.instance = instance;
 		this.levelPage = new LevelPage(instance);
+		this.crimsonPage = new CrimsonIslePage(instance);
 	}
 
-	/** The Home / Level buttons down the left edge, shared with the level-breakdown page. */
+	private static ItemStack withName(ItemStack stack, String name) {
+		stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal(name));
+		return stack;
+	}
+
+	private static final ItemStack[] SIDE_STACKS = {HOME_STACK, LEVEL_STACK, CRIMSON_STACK};
+	private static final String[] SIDE_NAMES = {"Home", "Level", "Crimson Isle"};
+
+	/** Which side button is pressed: 0 Home, 1 Level, 2 Crimson Isle. */
+	private static int activeSidePage() {
+		return GuiProfileViewer.onCrimsonPage ? 2 : GuiProfileViewer.onSecondPage ? 1 : 0;
+	}
+
+	/** The Home / Level / Crimson Isle buttons down the left edge, shared with the level and Crimson Isle pages. */
 	static void drawSideButtons(GuiGraphicsExtractor graphics, GuiProfileViewer instance, int mouseX, int mouseY) {
-		boolean second = GuiProfileViewer.onSecondPage;
-		// The unpressed button first, so the pressed one's wider edge draws over it.
-		LevelPage.drawSideButton(graphics, second ? 0 : 1, second ? HOME_STACK : LEVEL_STACK, false);
-		LevelPage.drawSideButton(graphics, second ? 1 : 0, second ? LEVEL_STACK : HOME_STACK, true);
+		int active = activeSidePage();
+		// The unpressed buttons first, so the pressed one's wider edge draws over them.
+		for (int i = 0; i < SIDE_STACKS.length; i++) {
+			if (i != active) LevelPage.drawSideButton(graphics, i, SIDE_STACKS[i], false);
+		}
+		LevelPage.drawSideButton(graphics, active, SIDE_STACKS[active], true);
 
 		int left = GuiProfileViewer.getGuiLeft() - 28;
 		int top = GuiProfileViewer.getGuiTop();
-		if (Utils.isWithinRect(mouseX, mouseY, left, top, 28, 28)) {
-			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Home");
-		} else if (Utils.isWithinRect(mouseX, mouseY, left, top + 28, 28, 28)) {
-			instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + "Level");
+		for (int i = 0; i < SIDE_NAMES.length; i++) {
+			if (Utils.isWithinRect(mouseX, mouseY, left, top + i * 28, 28, 28)) {
+				instance.tooltipToDisplay = Utils.createList(ChatFormatting.GRAY + SIDE_NAMES[i]);
+			}
 		}
 	}
 
-	/** Switches between the basic and level pages when a side button is clicked. */
+	/** Switches between the basic, level and Crimson Isle pages when a side button is clicked. */
 	static boolean clickedSideButtons(double mouseX, double mouseY, int mouseButton) {
 		if (mouseButton != 0) return false;
 		int left = GuiProfileViewer.getGuiLeft() - 28;
 		int top = GuiProfileViewer.getGuiTop();
-		boolean level;
-		if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top, 28, 28)) {
-			level = false;
-		} else if (Utils.isWithinRect((int) mouseX, (int) mouseY, left, top + 28, 28, 28)) {
-			level = true;
-		} else {
-			return false;
+		for (int i = 0; i < SIDE_STACKS.length; i++) {
+			if (!Utils.isWithinRect((int) mouseX, (int) mouseY, left, top + i * 28, 28, 28)) continue;
+			if (i != activeSidePage()) RenderUtils.playPressSound();
+			GuiProfileViewer.onSecondPage = i == 1;
+			GuiProfileViewer.onCrimsonPage = i == 2;
+			return true;
 		}
-		if (level != GuiProfileViewer.onSecondPage) RenderUtils.playPressSound();
-		GuiProfileViewer.onSecondPage = level;
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+		if (GuiProfileViewer.onCrimsonPage) return crimsonPage.mouseClicked(mouseX, mouseY, mouseButton);
 		if (GuiProfileViewer.onSecondPage) return levelPage.mouseClicked(mouseX, mouseY, mouseButton);
 		if (clickedSideButtons(mouseX, mouseY, mouseButton)) return true;
 
@@ -253,6 +270,40 @@ public class BasicPage implements GuiProfileViewerPage {
 		return instance;
 	}
 
+	private static final Map<String, String> NETWORTH_NAMES = Map.ofEntries(
+		Map.entry("inv_armor", "Armor"), Map.entry("inv_contents", "Inventory"),
+		Map.entry("ender_chest_contents", "Ender Chest"), Map.entry("backpack_contents", "Backpacks"),
+		Map.entry("talisman_bag", "Accessory Bag"), Map.entry("wardrobe_contents", "Wardrobe"),
+		Map.entry("equippment_contents", "Equipment"), Map.entry("personal_vault_contents", "Personal Vault"),
+		Map.entry("fishing_bag", "Fishing Bag"), Map.entry("potion_bag", "Potion Bag"), Map.entry("quiver", "Quiver"),
+		Map.entry("candy_inventory_contents", "Candy Bag"), Map.entry("loadout_equipment", "Equipment Sets"),
+		Map.entry("loadout_armor", "Armor Sets"), Map.entry("pets", "Pets"), Map.entry("sacks", "Sacks"),
+		Map.entry("museum", "Museum"), Map.entry("bank", "Bank"), Map.entry("purse", "Purse")
+	);
+
+	/** The net worth split by source, biggest first, then the joke IRL-money line. */
+	private static List<String> networthTooltip(Map<String, Long> breakdown, long networth) {
+		List<String> tooltip = new ArrayList<>();
+		tooltip.add(ChatFormatting.GREEN + "Net Worth: " + ChatFormatting.GOLD + GuiProfileViewer.numberFormat.format(networth));
+		breakdown.entrySet().stream()
+			.sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+			.forEach(entry -> tooltip.add(
+				ChatFormatting.GRAY + " " + NETWORTH_NAMES.getOrDefault(entry.getKey(), entry.getKey()) + ": " +
+					ChatFormatting.GOLD + GuiProfileViewer.numberFormat.format(entry.getValue()) + ChatFormatting.DARK_GRAY + " (" +
+					(networth > 0 ? Math.round(entry.getValue() * 1000.0 / networth) / 10.0 : 0) + "%)"
+			));
+		try {
+			double cookies = networth / NotEnoughUpdates.INSTANCE.manager.auctionManager.getBazaarInfo("BOOSTER_COOKIE").get("avg_buy").getAsDouble();
+			String irl = Long.toString(Math.round(((cookies * 325) / 675) * 4.99));
+			tooltip.add("");
+			tooltip.add(ChatFormatting.GREEN + "In IRL money: " + ChatFormatting.DARK_GREEN + "$" + ChatFormatting.GOLD + irl);
+			tooltip.add(ChatFormatting.GRAY + "Item prices provided by SkyCofl");
+			tooltip.add(ChatFormatting.DARK_GRAY + "(This is a joke, please don't trade real money)");
+		} catch (Exception ignored) {
+		}
+		return tooltip;
+	}
+
 	@Override
 	public void drawPage(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		Font fr = instance.getFont();
@@ -261,6 +312,10 @@ public class BasicPage implements GuiProfileViewerPage {
 		int guiLeft = GuiProfileViewer.getGuiLeft();
 		int guiTop = GuiProfileViewer.getGuiTop();
 
+		if (GuiProfileViewer.onCrimsonPage) {
+			crimsonPage.drawPage(graphics, mouseX, mouseY, partialTicks);
+			return;
+		}
 		if (GuiProfileViewer.onSecondPage) {
 			levelPage.drawPage(graphics, mouseX, mouseY, partialTicks);
 			return;
@@ -307,19 +362,9 @@ public class BasicPage implements GuiProfileViewerPage {
 				true,
 				0
 			);
-			try {
-				double networthInCookies =
-					networth / NotEnoughUpdates.INSTANCE.manager.auctionManager.getBazaarInfo("BOOSTER_COOKIE").get("avg_buy").getAsDouble();
-				String networthIRLMoney = Long.toString(Math.round(((networthInCookies * 325) / 675) * 4.99));
-				if (Utils.isWithinRect(mouseX, mouseY, guiLeft + 8, guiTop + 32, fr.width("Net Worth: " + GuiProfileViewer.numberFormat.format(networth)), fr.lineHeight)) {
-					instance.tooltipToDisplay = Utils.createList(
-						ChatFormatting.GREEN + "Net worth in IRL money: " + ChatFormatting.DARK_GREEN + "$" + ChatFormatting.GOLD + networthIRLMoney,
-						"",
-						ChatFormatting.GRAY + "Item prices provided by SkyCofl",
-						ChatFormatting.GRAY + "(This is a joke, please don't actually trade real money)"
-					);
-				}
-			} catch (Exception ignored) {
+			int labelWidth = fr.width("Net Worth: " + GuiProfileViewer.numberFormat.format(networth));
+			if (Utils.isWithinRect(mouseX, mouseY, guiLeft + 63 - labelWidth / 2, guiTop + 33, labelWidth, fr.lineHeight + 2)) {
+				instance.tooltipToDisplay = networthTooltip(profile.getNetWorthBreakdown(profileId), networth);
 			}
 		}
 
