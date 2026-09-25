@@ -261,8 +261,12 @@ public class BasicPage implements GuiProfileViewerPage {
 
 	/** A Hypixel colour name ("DARK_GREEN") as a § code. */
 	private static String colour(String name, String fallback) {
-		ChatFormatting formatting = ChatFormatting.getByName(name.toLowerCase(java.util.Locale.ROOT));
-		return formatting != null && formatting.isColor() ? formatting.toString() : fallback;
+		for (ChatFormatting formatting : ChatFormatting.values()) {
+			if (formatting.name().equalsIgnoreCase(name) && formatting.ordinal() <= ChatFormatting.WHITE.ordinal()) {
+				return formatting.toString();
+			}
+		}
+		return fallback;
 	}
 
 	@Override

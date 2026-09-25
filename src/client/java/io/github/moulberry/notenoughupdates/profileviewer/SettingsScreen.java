@@ -19,6 +19,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer;
 
+import io.github.moulberry.notenoughupdates.client.McCompat;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer.ProfileViewerPage;
 import io.github.moulberry.notenoughupdates.util.BpvConfig;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
@@ -452,6 +453,6 @@ public class SettingsScreen extends Screen {
 
 	@Override
 	public void onClose() {
-		this.minecraft.setScreen(parent);
+		McCompat.setScreen(this.minecraft, parent);
 	}
 }

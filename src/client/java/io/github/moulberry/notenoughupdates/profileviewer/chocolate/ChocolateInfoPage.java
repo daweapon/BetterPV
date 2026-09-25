@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.chocolate;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -141,7 +142,7 @@ public class ChocolateInfoPage implements GuiProfileViewerPage {
 				level < 200 ? "§6" : level < 220 ? "§d" : level < 236 ? "§b" : "§7";
 			int slotX = rowX(x, i, employees.size());
 			int slotY = top + i / PER_ROW * 18;
-			boolean hovered = PvUi.slot(graphics, level > 0 ? texture(id) : new ItemStack(Items.GRAY_DYE), slotX, slotY, mouseX, mouseY);
+			boolean hovered = PvUi.slot(graphics, level > 0 ? texture(id) : new ItemStack(VanillaItems.GRAY_DYE), slotX, slotY, mouseX, mouseY);
 			PvUi.count(graphics, font, colour + level, slotX, slotY);
 			if (hovered) {
 				double reward = PvData.evaluate(Utils.getElementAsString(employee.get("reward"), "level"), level);

@@ -112,7 +112,7 @@ public class BingoPage implements GuiProfileViewerPage {
 			} else {
 				communityGoal = false;
 				if (completedGoals.contains(bingoGoal.get("id").getAsString())) {
-					material = Items.LIME_DYE;
+					material = VanillaItems.LIME_DYE;
 					xAdjustment = -1;
 					dye = true;
 					completed = true;

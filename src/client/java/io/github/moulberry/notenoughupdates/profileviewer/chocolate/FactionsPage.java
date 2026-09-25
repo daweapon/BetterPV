@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.chocolate;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -54,7 +55,7 @@ public class FactionsPage implements GuiProfileViewerPage {
 
 	private final GuiProfileViewer instance;
 	private final Map<Integer, ItemStack> heads = new HashMap<>();
-	private final ItemStack missing = new ItemStack(Items.GRAY_DYE);
+	private final ItemStack missing = new ItemStack(VanillaItems.GRAY_DYE);
 
 	public FactionsPage(GuiProfileViewer instance) {
 		this.instance = instance;

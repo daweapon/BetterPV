@@ -19,6 +19,7 @@
 
 package io.github.moulberry.notenoughupdates.commands.profile;
 
+import io.github.moulberry.notenoughupdates.client.McCompat;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
@@ -80,7 +81,7 @@ public class ViewProfileCommand {
 				} else {
 					profile.resetCache();
 						GuiProfileViewer.applyOpeningTab();
-					source.getClient().setScreen(new GuiProfileViewer(profile));
+					McCompat.setScreen(source.getClient(), new GuiProfileViewer(profile));
 				}
 			});
 		});

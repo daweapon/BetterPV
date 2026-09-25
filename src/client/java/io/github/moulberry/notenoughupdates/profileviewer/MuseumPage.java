@@ -564,8 +564,8 @@ public class MuseumPage implements GuiProfileViewerPage {
 
 	private ItemStack stack(String key) {
 		return stacks.computeIfAbsent(key, k -> switch (k) {
-			case "lime_dye" -> new ItemStack(Items.LIME_DYE);
-			default -> new ItemStack(Items.GRAY_DYE);
+			case "lime_dye" -> new ItemStack(VanillaItems.LIME_DYE);
+			default -> new ItemStack(VanillaItems.GRAY_DYE);
 		});
 	}
 

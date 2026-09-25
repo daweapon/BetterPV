@@ -267,7 +267,7 @@ public class LoadoutsPage implements GuiProfileViewerPage {
 	}
 
 	private ItemStack selectorIcon(Saved entry) {
-		if (entry == null) return new ItemStack(Items.RED_DYE);
+		if (entry == null) return new ItemStack(VanillaItems.RED_DYE);
 		ItemStack armor = firstItem(setItems(entry.armorSet(), armorSets, equippedArmor, wornArmor));
 		if (armor != null) return armor;
 		ItemStack equipment = firstItem(setItems(entry.equipmentSet(), equipmentSets, equippedEquipment, wornEquipment));
@@ -279,7 +279,7 @@ public class LoadoutsPage implements GuiProfileViewerPage {
 			ItemStack stack = petIcon(pet);
 			if (stack != null) return stack;
 		}
-		return new ItemStack(entry.isEmpty() ? Items.GRAY_DYE : Items.GREEN_DYE);
+		return new ItemStack(entry.isEmpty() ? VanillaItems.GRAY_DYE : VanillaItems.GREEN_DYE);
 	}
 
 	private ItemStack firstItem(JsonObject[] items) {

@@ -19,6 +19,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer;
 
+import io.github.moulberry.notenoughupdates.client.McCompat;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -240,7 +241,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		this.addRenderableWidget(playerNameTextField);
 		this.addRenderableWidget(
 			net.minecraft.client.gui.components.Button.builder(
-				Component.literal("Settings"), button -> this.minecraft.setScreen(new SettingsScreen(this))
+				Component.literal("Settings"), button -> McCompat.setScreen(this.minecraft, new SettingsScreen(this))
 			).bounds(guiLeft + sizeX - 160, guiTop + sizeY + 5, 54, 20).build()
 		);
 	}
@@ -766,7 +767,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		RenderUtils.playPressSound();
 		NotEnoughUpdates.INSTANCE.getProfileViewer().getProfileByName(name, newProfile -> {
 			if (newProfile != null) newProfile.resetCache();
-			this.minecraft.execute(() -> this.minecraft.setScreen(new GuiProfileViewer(newProfile)));
+			this.minecraft.execute(() -> McCompat.setScreen(this.minecraft, new GuiProfileViewer(newProfile)));
 		});
 	}
 
@@ -781,7 +782,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 				playerNameTextField.getValue(),
 				newProfile -> {
 					if (newProfile != null) newProfile.resetCache();
-					this.minecraft.execute(() -> this.minecraft.setScreen(new GuiProfileViewer(newProfile)));
+					this.minecraft.execute(() -> McCompat.setScreen(this.minecraft, new GuiProfileViewer(newProfile)));
 				}
 			);
 			return true;

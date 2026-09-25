@@ -3,7 +3,7 @@
 	"id": "betterpv",
 	"version": "${version}",
 	"name": "Better PV",
-	"description": "A standalone Hypixel SkyBlock profile viewer, ported from the NotEnoughUpdates Profile Viewer (Forge 1.8.9) to Fabric 26.1.2. Use /pv, /neuprofile, /peek or /cata.",
+	"description": "A standalone Hypixel SkyBlock profile viewer, ported from the NotEnoughUpdates Profile Viewer (Forge 1.8.9) to modern Fabric. Use /pv, /neuprofile, /peek or /cata.",
 	"authors": [
 		"daweapon",
 		"Moulberry and the NotEnoughUpdates contributors (original Profile Viewer)"
@@ -26,7 +26,7 @@
 	},
 	"depends": {
 		"fabricloader": ">=0.19.3",
-		"minecraft": "~26.1.2",
+		"minecraft": "${minecraftDependency}",
 		"java": ">=25",
 		"fabric-api": "*"
 	}

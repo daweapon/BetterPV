@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.foraging;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonObject;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer;
 import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewerPage;
@@ -146,8 +147,8 @@ public class HotfPage implements GuiProfileViewerPage {
 		int tier = tier(profileInfo);
 		for (int i = 1; i <= MAX_TIER; i++) {
 			int y = top + (MAX_TIER - i) * CELL;
-			ItemStack pane = new ItemStack(i <= tier ? Items.GREEN_STAINED_GLASS_PANE
-				: i == tier + 1 ? Items.YELLOW_STAINED_GLASS_PANE : Items.RED_STAINED_GLASS_PANE);
+			ItemStack pane = new ItemStack(i <= tier ? VanillaItems.GREEN_STAINED_GLASS_PANE
+				: i == tier + 1 ? VanillaItems.YELLOW_STAINED_GLASS_PANE : VanillaItems.RED_STAINED_GLASS_PANE);
 			RenderUtils.drawTexturedRect(graphics, PERK_BACKGROUND, x, y, CELL - 1, CELL - 1);
 			RenderUtils.drawItemStack(graphics, pane, x + 1, y + 1);
 			if (Utils.isWithinRect(mouseX, mouseY, x, y, CELL - 1, CELL - 1)) {

@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.mining;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -80,7 +81,7 @@ public class GlacitePage implements GuiProfileViewerPage {
 
 	private final GuiProfileViewer instance;
 	private final Map<String, ItemStack> icons = new HashMap<>();
-	private static final ItemStack NOT_DONATED = new ItemStack(Items.GRAY_DYE);
+	private static final ItemStack NOT_DONATED = new ItemStack(VanillaItems.GRAY_DYE);
 
 	public GlacitePage(GuiProfileViewer instance) {
 		this.instance = instance;

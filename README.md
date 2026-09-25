@@ -1,6 +1,6 @@
 # Better PV
 
-Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 26.1.2. It's a port of the Profile Viewer from the old Minecraft 1.8.9 [NotEnoughUpdates](https://github.com/NotEnoughUpdates/NotEnoughUpdates) mod, brought to modern Minecraft and updated for Hypixel's current API and SkyBlock. Type `/pv <player>` to see any player's SkyBlock profile in game: skills, dungeons, collections, pets, storage, Heart of the Mountain, trophy fish, bestiary, farming and the garden, foraging, loadouts, museum, chocolate factory, the Rift and more. There's no stats website to open, and **no API key is needed**.
+Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 26.1.2 and 26.2. It's a port of the Profile Viewer from the old Minecraft 1.8.9 [NotEnoughUpdates](https://github.com/NotEnoughUpdates/NotEnoughUpdates) mod, brought to modern Minecraft and updated for Hypixel's current API and SkyBlock. Type `/pv <player>` to see any player's SkyBlock profile in game: skills, dungeons, collections, pets, storage, Heart of the Mountain, trophy fish, bestiary, farming and the garden, foraging, loadouts, museum, chocolate factory, the Rift and more. There's no stats website to open, and **no API key is needed**.
 
 <p align="center"><img src="docs/screenshot.png" alt="Better PV showing a player's skills, SkyBlock level and 3D model" width="720"></p>
 
@@ -19,9 +19,9 @@ Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 2
 
 ## Installing
 
-1. Install [Fabric Loader](https://fabricmc.net/use/) 0.19.3 or newer for Minecraft 26.1.2. The Minecraft launcher provides the Java 25 it needs.
-2. Download [Fabric API](https://modrinth.com/mod/fabric-api) for 26.1.2 and put it in your `mods` folder.
-3. Download the latest Better PV jar from this repo's [Releases](https://github.com/daweapon/BetterPV/releases) and put it in your `mods` folder too.
+1. Install [Fabric Loader](https://fabricmc.net/use/) 0.19.3 or newer for Minecraft 26.1.2 or 26.2. The Minecraft launcher provides the Java 25 it needs.
+2. Download [Fabric API](https://modrinth.com/mod/fabric-api) for your Minecraft version and put it in your `mods` folder.
+3. Download the latest Better PV jar from this repo's [Releases](https://github.com/daweapon/BetterPV/releases) and put it in your `mods` folder too. Every release has one jar per Minecraft version: `Better-PV-<version>-mc26.1.2.jar` and `Better-PV-<version>-mc26.2.jar`. Use the one that matches your game.
 4. Launch the game and join Hypixel. That's it: Better PV fetches profile data through its own server, so you don't need a Hypixel API key.
 
 The first time you start the game, Better PV downloads the NotEnoughUpdates item repo, which has item icons, pets and the bestiary and HOTM layouts. It needs an internet connection for this.
@@ -47,6 +47,16 @@ The first time you start the game, Better PV downloads the NotEnoughUpdates item
 - **Hide Net Worth:** hide the net worth and its breakdown on the Your Skills tab.
 - **Chat Right-Click:** turn the right-click-a-name feature in SkyBlock chat on or off.
 - **Tabs:** switch any tab off except Your Skills. Hidden tabs still load their data, since other pages (such as the Level page) read it.
+
+## Building
+
+Better PV is built from one source tree for several Minecraft versions. `versions/<minecraft version>.properties` lists the Minecraft and Fabric API versions for each one, and `versions/<minecraft version>/client/java` holds the few classes that differ between game versions.
+
+- `.\gradlew.bat build` builds the default version (26.1.2).
+- `.\gradlew.bat build "-Pmc=26.2"` builds a specific version.
+- `.uildAll.ps1` builds every version and puts the jars in `build/dist`.
+
+To support a new Minecraft version, add a `versions/<version>.properties` file and, if needed, a `McCompat` class for it.
 
 ## Credits
 

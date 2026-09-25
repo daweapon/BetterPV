@@ -67,7 +67,7 @@ public final class SkillTreeView {
 	}
 
 	private static final TreeItems MINING_ITEMS = new TreeItems(
-		Items.DIAMOND_BLOCK, Items.COPPER_BLOCK, Items.REDSTONE_BLOCK, Items.BEDROCK,
+		Items.DIAMOND_BLOCK, VanillaItems.COPPER_BLOCK, Items.REDSTONE_BLOCK, Items.BEDROCK,
 		Items.EMERALD_BLOCK, Items.REDSTONE_BLOCK, Items.COAL_BLOCK,
 		Items.REDSTONE, Items.DIAMOND, Items.EMERALD, Items.COAL
 	);

@@ -97,8 +97,8 @@ public class ChatProfileClick {
 
 	private static String nameAt(Minecraft client, int mouseX, int mouseY) {
 		ActiveTextCollector.ClickableStyleFinder finder = new ActiveTextCollector.ClickableStyleFinder(client.font, mouseX, mouseY);
-		ChatComponent chat = client.gui.getChat();
-		chat.captureClickableText(new NameTagger(finder), client.getWindow().getGuiScaledHeight(), client.gui.getGuiTicks(),
+		ChatComponent chat = McCompat.chat(client);
+		chat.captureClickableText(new NameTagger(finder), client.getWindow().getGuiScaledHeight(), McCompat.guiTicks(client),
 			ChatComponent.DisplayMode.FOREGROUND);
 		Style style = finder.result();
 		if (style != null && style.getClickEvent() instanceof ClickEvent.CopyToClipboard copy) return copy.value();
@@ -112,7 +112,7 @@ public class ChatProfileClick {
 			} else {
 				profile.resetCache();
 				io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer.applyOpeningTab();
-				client.setScreen(new io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer(profile));
+				McCompat.setScreen(client, new io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer(profile));
 			}
 		}));
 	}

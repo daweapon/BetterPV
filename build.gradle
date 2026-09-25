@@ -11,6 +11,19 @@ repositories {
 	// for more information about repositories.
 }
 
+// One source tree, one jar per Minecraft version. Build a specific version with -Pmc=<version> (the versions/<version>.properties
+// file supplies its Minecraft, Fabric API and dependency range); without -Pmc the gradle.properties default is built.
+// buildAll.ps1 builds every version in versions/.
+def targetMc = findProperty('mc') ?: minecraft_version
+def versionFile = file("versions/${targetMc}.properties")
+if (!versionFile.exists()) throw new GradleException("No versions/${targetMc}.properties for Minecraft ${targetMc}")
+def versionProps = new Properties()
+versionFile.withInputStream { versionProps.load(it) }
+versionProps.each { key, value -> project.ext.set(key.toString(), value.toString()) }
+
+// Jars are named notenoughupdates-mc<minecraft>-<version>.jar so each game version keeps its own file.
+base.archivesName = "notenoughupdates-mc${targetMc}"
+
 loom {
 	splitEnvironmentSourceSets()
 
@@ -21,6 +34,9 @@ loom {
 		}
 	}
 }
+
+// Version-specific sources (see McCompat) live in versions/<minecraft version>/client/java.
+sourceSets.client.java.srcDir "versions/${targetMc}/client/java"
 
 dependencies {
 	// To change the versions see the gradle.properties file
@@ -33,10 +49,12 @@ dependencies {
 
 processResources {
 	def version = project.version
+	def minecraftDependency = project.minecraft_dependency
 	inputs.property "version", version
+	inputs.property "minecraftDependency", minecraftDependency
 
 	filesMatching("fabric.mod.json") {
-		expand "version": version
+		expand "version": version, "minecraftDependency": minecraftDependency
 	}
 }
 

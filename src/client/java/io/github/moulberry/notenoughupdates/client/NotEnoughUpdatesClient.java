@@ -58,7 +58,7 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (openSettingsNextTick) {
 				openSettingsNextTick = false;
-				client.setScreen(new SettingsScreen(null));
+				McCompat.setScreen(client, new SettingsScreen(null));
 			}
 		});
 

@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.rift;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -60,7 +61,7 @@ public class RiftMainPage implements GuiProfileViewerPage {
 	}
 
 	private final GuiProfileViewer instance;
-	private final ItemStack grayDye = new ItemStack(Items.GRAY_DYE);
+	private final ItemStack grayDye = new ItemStack(VanillaItems.GRAY_DYE);
 
 	public RiftMainPage(GuiProfileViewer instance) {
 		this.instance = instance;

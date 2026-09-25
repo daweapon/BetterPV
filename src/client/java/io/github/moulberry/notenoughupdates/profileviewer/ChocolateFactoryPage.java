@@ -45,7 +45,7 @@ public class ChocolateFactoryPage extends CategorizedPage {
 
 	private static ItemStack ominousBanner() {
 		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.level == null) return new ItemStack(Items.WHITE_BANNER);
+		if (minecraft.level == null) return new ItemStack(VanillaItems.WHITE_BANNER);
 		return Raid.getOminousBannerInstance(minecraft.level.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN));
 	}
 }

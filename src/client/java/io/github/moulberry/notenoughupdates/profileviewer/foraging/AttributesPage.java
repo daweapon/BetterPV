@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.foraging;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -306,7 +307,7 @@ public class AttributesPage implements GuiProfileViewerPage {
 		graphics.fill(x + 1, y + 1, x + SLOT - 1, y + SLOT - 1, 0x50000000 | colour(shard));
 		ItemStack stack;
 		if (shard.max() != 0 && shard.syphoned() <= 0 && filter != Filter.LOCKED) {
-			stack = stackCache.computeIfAbsent("gray_dye", key -> new ItemStack(Items.GRAY_DYE));
+			stack = stackCache.computeIfAbsent("gray_dye", key -> new ItemStack(VanillaItems.GRAY_DYE));
 		} else {
 			stack = shardStack(shard);
 		}

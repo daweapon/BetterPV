@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.farming;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -64,8 +65,8 @@ public class ComposterPage implements GuiProfileViewerPage {
 	}
 
 	private final GuiProfileViewer instance;
-	private final ItemStack unlocked = new ItemStack(Items.LIME_STAINED_GLASS_PANE);
-	private final ItemStack locked = new ItemStack(Items.BLACK_STAINED_GLASS_PANE);
+	private final ItemStack unlocked = new ItemStack(VanillaItems.LIME_STAINED_GLASS_PANE);
+	private final ItemStack locked = new ItemStack(VanillaItems.BLACK_STAINED_GLASS_PANE);
 
 	public ComposterPage(GuiProfileViewer instance) {
 		this.instance = instance;

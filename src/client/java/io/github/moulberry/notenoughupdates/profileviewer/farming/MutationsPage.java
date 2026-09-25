@@ -21,6 +21,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.farming;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,7 +52,7 @@ public class MutationsPage extends GroupedGridPage<MutationsPage.Mutation> {
 	record Mutation(String id, String name, int rarity, boolean known, boolean analyzable, boolean discovered, boolean analyzed) {
 	}
 
-	private final ItemStack grayDye = new ItemStack(Items.GRAY_DYE);
+	private final ItemStack grayDye = new ItemStack(VanillaItems.GRAY_DYE);
 	private final ItemStack unknown = new ItemStack(Items.BARRIER);
 	private JsonObject dataFor;
 	private List<Mutation> mutations = List.of();

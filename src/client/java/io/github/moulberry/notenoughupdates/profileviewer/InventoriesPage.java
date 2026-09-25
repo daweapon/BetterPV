@@ -555,7 +555,7 @@ public class InventoriesPage implements GuiProfileViewerPage {
 		}
 	}
 
-	private static final ItemStack FILLER_STACK = new ItemStack(Blocks.LIGHT_GRAY_STAINED_GLASS_PANE);
+	private static final ItemStack FILLER_STACK = new ItemStack(VanillaItems.LIGHT_GRAY_STAINED_GLASS_PANE);
 
 	private void renderJsonItemSlotNoTooltip(GuiGraphicsExtractor graphics, JsonObject item, int x, int y) {
 		if (item == null) return;

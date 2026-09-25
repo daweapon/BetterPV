@@ -19,6 +19,7 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer.chocolate;
 
+import io.github.moulberry.notenoughupdates.profileviewer.VanillaItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -48,7 +49,7 @@ public class RabbitsPage extends GroupedGridPage<RabbitsPage.Entry> {
 	record Entry(Rabbits.Rabbit rabbit, long found, String location) {
 	}
 
-	private final ItemStack grayDye = new ItemStack(Items.GRAY_DYE);
+	private final ItemStack grayDye = new ItemStack(VanillaItems.GRAY_DYE);
 	private JsonObject dataFor;
 	private List<Entry> entries = List.of();
 
