@@ -47,6 +47,7 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register(pvPhase, (dispatcher, registryAccess) -> PvCommand.register(dispatcher));
 
 		ChatProfileClick.register();
+		UpdateChecker.register();
 
 		// /bpv opens the settings screen. Opening it straight from the command would be undone by chat closing
 		// afterwards, so the screen is opened on the next tick.

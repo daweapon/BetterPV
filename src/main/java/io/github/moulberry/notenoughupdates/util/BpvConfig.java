@@ -51,6 +51,7 @@ public class BpvConfig {
 		boolean shortNumbers = false;
 		boolean hideNetWorth = false;
 		boolean chatRightClick = true;
+		boolean updateCheck = true;
 	}
 
 	public static class ProfileHistoryEntry {
@@ -113,6 +114,17 @@ public class BpvConfig {
 	public static synchronized void setHideNetWorth(boolean value) {
 		if (cached == null) load();
 		cached.hideNetWorth = value;
+		save();
+	}
+
+	public static synchronized boolean isUpdateCheck() {
+		if (cached == null) load();
+		return cached.updateCheck;
+	}
+
+	public static synchronized void setUpdateCheck(boolean value) {
+		if (cached == null) load();
+		cached.updateCheck = value;
 		save();
 	}
 

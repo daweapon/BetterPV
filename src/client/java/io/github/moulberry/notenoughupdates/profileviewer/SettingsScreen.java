@@ -220,6 +220,11 @@ public class SettingsScreen extends Screen {
 			"Right-click a player's name in chat, while on SkyBlock, to open their profile.",
 			BpvConfig::isChatRightClick, BpvConfig::setChatRightClick
 		));
+		general.options.add(new Toggle(
+			"Update Notifications",
+			"Tell me in chat when a newer Better PV release is out (checks GitHub once per launch).",
+			BpvConfig::isUpdateCheck, BpvConfig::setUpdateCheck
+		));
 		categories.add(general);
 
 		Category tabs = new Category("Tabs", "Turn tabs on or off. Your Skills is always on.");
