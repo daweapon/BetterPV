@@ -100,9 +100,59 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	public static final Identifier pv_stranded = Identifier.parse("betterpv:pv_stranded.png");
 	public static final Identifier pv_unknown = Identifier.parse("betterpv:pv_unknown.png");
 
-	public static final java.text.NumberFormat numberFormat = java.text.NumberFormat.getInstance(Locale.US);
+	/** Full ("12,345,678") or, with the "Short numbers" setting on, abbreviated ("12.3m") numbers. */
+	public static final java.text.NumberFormat numberFormat = new java.text.NumberFormat() {
+		private final java.text.NumberFormat full = java.text.NumberFormat.getInstance(Locale.US);
+
+		@Override
+		public StringBuffer format(double number, StringBuffer toAppendTo, java.text.FieldPosition pos) {
+			return BpvConfig.isShortNumbers() && Math.abs(number) >= 10_000
+				? toAppendTo.append(shorten(number))
+				: full.format(number, toAppendTo, pos);
+		}
+
+		@Override
+		public StringBuffer format(long number, StringBuffer toAppendTo, java.text.FieldPosition pos) {
+			return format((double) number, toAppendTo, pos);
+		}
+
+		@Override
+		public Number parse(String source, java.text.ParsePosition parsePosition) {
+			return full.parse(source, parsePosition);
+		}
+
+		private String shorten(double number) {
+			String[] suffixes = {"k", "m", "b", "t"};
+			double value = number;
+			int suffix = -1;
+			while (Math.abs(value) >= 1000 && suffix < suffixes.length - 1) {
+				value /= 1000;
+				suffix++;
+			}
+			String text = String.format(Locale.US, "%.1f", value);
+			if (text.endsWith(".0")) text = text.substring(0, text.length() - 2);
+			return text + suffixes[suffix];
+		}
+	};
 
 	public static ProfileViewerPage currentPage = ProfileViewerPage.BASIC;
+
+	/** Called when a viewer is opened from a command or chat: jumps to the tab chosen in settings, if any. */
+	public static void applyOpeningTab() {
+		String tab = BpvConfig.getOpeningTab();
+		if (tab.equals("LAST")) return;
+		try {
+			currentPage = ProfileViewerPage.valueOf(tab);
+			onSecondPage = false;
+			onCrimsonPage = false;
+		} catch (IllegalArgumentException ignored) {
+		}
+	}
+
+	/** Whether a tab can be shown: it has an icon and hasn't been switched off in settings. Basic is always on. */
+	public static boolean isTabEnabled(ProfileViewerPage page) {
+		return page.stack != null && (page == ProfileViewerPage.BASIC || !BpvConfig.isTabHidden(page.name()));
+	}
 	/** Whether the Basic tab is showing its level-breakdown page (LevelPage) instead of the overview. */
 	public static boolean onSecondPage = false;
 	/** Whether the Basic tab is showing the Crimson Isle page (CrimsonIslePage). */
@@ -188,6 +238,11 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		playerNameTextField.setValue(initialPlayerName);
 		playerNameTextField.setMaxLength(64);
 		this.addRenderableWidget(playerNameTextField);
+		this.addRenderableWidget(
+			net.minecraft.client.gui.components.Button.builder(
+				Component.literal("Settings"), button -> this.minecraft.setScreen(new SettingsScreen(this))
+			).bounds(guiLeft + sizeX - 160, guiTop + sizeY + 5, 54, 20).build()
+		);
 	}
 
 	private static float getMaxLevelXp(JsonArray levels, int offset, int maxLevel) {
@@ -313,6 +368,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		showBingoPage =
 			currProfileInfo != null && currProfileInfo.has("game_mode") && currProfileInfo.get("game_mode").getAsString().equals("bingo");
 		if (!showBingoPage && currentPage == ProfileViewerPage.BINGO) currentPage = ProfileViewerPage.BASIC;
+		if (currentPage.stack != null && !isTabEnabled(currentPage)) currentPage = ProfileViewerPage.BASIC;
 
 		// No blur call here: vanilla's Screen#extractBackground (run just before this method) already blurs the game
 		// world behind the window, and blurring a second time in one frame throws "Can only blur once per frame".
@@ -573,7 +629,7 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 	private List<ProfileViewerPage> visibleTabs() {
 		List<ProfileViewerPage> tabs = new ArrayList<>();
 		for (ProfileViewerPage p : ProfileViewerPage.values()) {
-			if (p.stack == null) continue;
+			if (!isTabEnabled(p)) continue;
 			if (p == ProfileViewerPage.BINGO && !showBingoPage) continue;
 			tabs.add(p);
 		}

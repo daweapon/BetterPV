@@ -67,7 +67,7 @@ public class CollectionsPage implements GuiProfileViewerPage {
 		"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
 		"XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XIX", "XX",
 	};
-	private static final NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
+	private static final NumberFormat numberFormat = GuiProfileViewer.numberFormat;
 
 	private final GuiProfileViewer instance;
 	private ItemStack selectedCollectionCategory = null;

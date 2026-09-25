@@ -351,7 +351,8 @@ public class BasicPage implements GuiProfileViewerPage {
 
 		drawPlayer(graphics, profile, profileId, guiLeft, guiTop, mouseX, mouseY);
 
-		long networth = profile.getNetWorthInBackground(profileId);
+		long networth = io.github.moulberry.notenoughupdates.util.BpvConfig.isHideNetWorth()
+			? -1 : profile.getNetWorthInBackground(profileId);
 		if (networth > 0) {
 			RenderUtils.drawStringCentered(
 				graphics,

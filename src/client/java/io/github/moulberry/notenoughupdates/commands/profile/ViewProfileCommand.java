@@ -79,6 +79,7 @@ public class ViewProfileCommand {
 					source.sendError(Component.literal(ChatFormatting.RED + "Unknown player, or the Better PV server couldn't be reached."));
 				} else {
 					profile.resetCache();
+						GuiProfileViewer.applyOpeningTab();
 					source.getClient().setScreen(new GuiProfileViewer(profile));
 				}
 			});

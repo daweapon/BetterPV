@@ -20,6 +20,7 @@
 package io.github.moulberry.notenoughupdates.client;
 
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
+import io.github.moulberry.notenoughupdates.util.BpvConfig;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
@@ -60,11 +61,11 @@ public class ChatProfileClick {
 			}
 		});
 		ClientReceiveMessageEvents.MODIFY_GAME.register((message, overlay) ->
-			overlay || !isOnSkyblock(Minecraft.getInstance()) ? message : addHoverHints(message));
+			overlay || !BpvConfig.isChatRightClick() || !isOnSkyblock(Minecraft.getInstance()) ? message : addHoverHints(message));
 	}
 
 	private static boolean handleClick(Minecraft client, MouseButtonEvent event) {
-		if (event.button() != 1 || !isOnSkyblock(client)) return false;
+		if (event.button() != 1 || !BpvConfig.isChatRightClick() || !isOnSkyblock(client)) return false;
 		String name = nameAt(client, (int) event.x(), (int) event.y());
 		if (name == null) return false;
 		openProfile(client, name);
@@ -110,6 +111,7 @@ public class ChatProfileClick {
 				client.player.sendSystemMessage(Component.literal(ChatFormatting.RED + "Unknown player, or the Better PV server couldn't be reached."));
 			} else {
 				profile.resetCache();
+				io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer.applyOpeningTab();
 				client.setScreen(new io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer(profile));
 			}
 		}));

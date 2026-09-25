@@ -1,6 +1,9 @@
 package io.github.moulberry.notenoughupdates.client;
 
 import net.fabricmc.api.ClientModInitializer;
+import io.github.moulberry.notenoughupdates.profileviewer.SettingsScreen;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;
 import io.github.moulberry.notenoughupdates.commands.profile.CataCommand;
 import io.github.moulberry.notenoughupdates.commands.profile.PeekCommand;
@@ -20,6 +23,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class NotEnoughUpdatesClient implements ClientModInitializer {
+	private static boolean openSettingsNextTick;
+
 	@Override
 	public void onInitializeClient() {
 		// Profile viewer GUI commands. See commands.profile.* for the port notes (old ClientCommandBase/
@@ -42,6 +47,20 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register(pvPhase, (dispatcher, registryAccess) -> PvCommand.register(dispatcher));
 
 		ChatProfileClick.register();
+
+		// /bpv opens the settings screen. Opening it straight from the command would be undone by chat closing
+		// afterwards, so the screen is opened on the next tick.
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+			dispatcher.register(ClientCommands.literal("bpv").executes(ctx -> {
+				openSettingsNextTick = true;
+				return 0;
+			})));
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			if (openSettingsNextTick) {
+				openSettingsNextTick = false;
+				client.setScreen(new SettingsScreen(null));
+			}
+		});
 
 		// Lets BpvBackend prove who the player is, using the Mojang-certified profile key pair vanilla uses for
 		// chat signing. prepareKeyPair() is asked for on the render thread, where vanilla itself calls it.

@@ -33,9 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Better PV's small config file, {@code <config-dir>/betterpv/config.json}, read with Gson. It only holds
- * {@code backendUrl}, an optional override for the Better PV backend (see {@link BpvBackend}); leave it empty to
- * use the default. The mod has no API key setting: Hypixel keys stay on the backend (see
+ * Better PV's small config file, {@code <config-dir>/betterpv/config.json}, read with Gson. It holds
+ * {@code backendUrl}, an optional override for the Better PV backend (see {@link BpvBackend}; leave it empty to
+ * use the default), the recent-player history, and the settings screen's options. The mod has no API key setting: Hypixel keys stay on the backend (see
  * {@link ApiUtil#newHypixelApiRequest}). Older files may still have an {@code apiKey} field, which is ignored.
  */
 public class BpvConfig {
@@ -45,6 +45,13 @@ public class BpvConfig {
 	private static class Data {
 		String backendUrl = "";
 		List<ProfileHistoryEntry> profileHistory = new ArrayList<>();
+		/** {@code ProfileViewerPage} names of the tabs switched off in settings. */
+		List<String> hiddenTabs = new ArrayList<>();
+		/** A {@code ProfileViewerPage} name, or {@code "LAST"} to reopen on the tab used last. */
+		String openingTab = "LAST";
+		boolean shortNumbers = false;
+		boolean hideNetWorth = false;
+		boolean chatRightClick = true;
 	}
 
 	public static class ProfileHistoryEntry {
@@ -61,6 +68,64 @@ public class BpvConfig {
 	public static synchronized String getBackendUrl() {
 		if (cached == null) load();
 		return cached.backendUrl == null ? "" : cached.backendUrl.trim();
+	}
+
+	public static synchronized boolean isTabHidden(String tab) {
+		if (cached == null) load();
+		return cached.hiddenTabs != null && cached.hiddenTabs.contains(tab);
+	}
+
+	public static synchronized void setTabHidden(String tab, boolean hidden) {
+		if (cached == null) load();
+		if (cached.hiddenTabs == null) cached.hiddenTabs = new ArrayList<>();
+		cached.hiddenTabs.remove(tab);
+		if (hidden) cached.hiddenTabs.add(tab);
+		save();
+	}
+
+	/** @return a {@code ProfileViewerPage} name, or {@code "LAST"}. */
+	public static synchronized String getOpeningTab() {
+		if (cached == null) load();
+		return cached.openingTab == null ? "LAST" : cached.openingTab;
+	}
+
+	public static synchronized void setOpeningTab(String tab) {
+		if (cached == null) load();
+		cached.openingTab = tab;
+		save();
+	}
+
+	public static synchronized boolean isShortNumbers() {
+		if (cached == null) load();
+		return cached.shortNumbers;
+	}
+
+	public static synchronized void setShortNumbers(boolean value) {
+		if (cached == null) load();
+		cached.shortNumbers = value;
+		save();
+	}
+
+	public static synchronized boolean isHideNetWorth() {
+		if (cached == null) load();
+		return cached.hideNetWorth;
+	}
+
+	public static synchronized void setHideNetWorth(boolean value) {
+		if (cached == null) load();
+		cached.hideNetWorth = value;
+		save();
+	}
+
+	public static synchronized boolean isChatRightClick() {
+		if (cached == null) load();
+		return cached.chatRightClick;
+	}
+
+	public static synchronized void setChatRightClick(boolean value) {
+		if (cached == null) load();
+		cached.chatRightClick = value;
+		save();
 	}
 
 	public static synchronized List<ProfileHistoryEntry> getProfileHistory() {
