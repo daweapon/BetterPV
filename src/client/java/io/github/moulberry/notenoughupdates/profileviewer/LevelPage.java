@@ -27,6 +27,7 @@ import io.github.moulberry.notenoughupdates.profileviewer.bestiary.BestiaryData;
 import io.github.moulberry.notenoughupdates.profileviewer.farming.Garden;
 import io.github.moulberry.notenoughupdates.profileviewer.foraging.AttributesPage;
 import io.github.moulberry.notenoughupdates.profileviewer.foraging.HotfPage;
+import io.github.moulberry.notenoughupdates.profileviewer.mining.GlacitePage;
 import io.github.moulberry.notenoughupdates.util.Constants;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
@@ -205,7 +206,7 @@ public class LevelPage implements GuiProfileViewerPage {
 		if (Math.abs(gap) >= 1) {
 			mainTooltip.add(
 				gap > 0
-					? "§7Not shown here yet: §e" + GuiProfileViewer.numberFormat.format((long) gap)
+					? "§7Other sources (not in Hypixel's API): §e" + GuiProfileViewer.numberFormat.format((long) gap)
 					: "§7Counted above the profile's XP: §e" + GuiProfileViewer.numberFormat.format((long) -gap)
 			);
 		}
@@ -674,9 +675,48 @@ public class LevelPage implements GuiProfileViewerPage {
 
 		if (gardenStatus == null) addGarden(lines, garden);
 
+		// Tree gift milestones: 4 XP for each milestone tier claimed on any of the three trees.
+		int giftTiers = 0;
+		if (Utils.getElement(member, "foraging.tree_gifts.milestone_tier_claimed") instanceof JsonObject claimed) {
+			for (JsonElement tier : claimed.asMap().values()) giftTiers += Utils.getElementAsInt(tier, 0);
+		}
+		lines.add("Tree Gift Milestones", Math.min(giftTiers, 21) * 4, 84);
+
+		// Farming chips: 1 XP to unlock a chip, 15 to upgrade it to epic (level 11) and 25 to legendary (level 16).
+		// Sowdust: 1 XP per million spent on chip levels (up to 250 million).
+		int chipXp = 0;
+		double sowdustSpent = 0;
+		List<Long> chipCosts = PvData.cumulative(Garden.repo("chips"));
+		if (Utils.getElement(member, "player_data.garden_chips") instanceof JsonObject chips) {
+			for (JsonElement level : chips.asMap().values()) {
+				int reached = Utils.getElementAsInt(level, 0);
+				if (reached >= 1) chipXp += 1;
+				if (reached >= 11) chipXp += 15;
+				if (reached >= 16) chipXp += 25;
+				if (reached >= 1 && !chipCosts.isEmpty()) sowdustSpent += chipCosts.get(Math.min(reached - 1, chipCosts.size() - 1));
+			}
+		}
+		lines.add("Farming Chips", Math.min(chipXp, 410), 410);
+		lines.add("Sowdust", Math.min(Math.floor(sowdustSpent / 1_000_000), 250), 250);
+
+		// Corpse milestones: 5 XP for the first tier, 10 for the second and so on up to 35 for the seventh.
+		int corpseTier = GlacitePage.corpseMilestone(member);
+		lines.add("Corpse Milestones", 5 * corpseTier * (corpseTier + 1) / 2, 140);
+
 		return new Task(
 			"Skill Related Task", () -> new ItemStack(Items.DIAMOND_SWORD), 23, 115, lines.gained, lines.max, lines.lore
 		);
+	}
+
+	/** How many of the repo's cumulative milestone thresholds the garden's counter has passed. */
+	private static int milestonesReached(JsonObject garden, String counterPath, String repoPath) {
+		long value = PvData.getLong(garden, counterPath);
+		List<Long> thresholds = PvData.cumulative(Garden.repo(repoPath));
+		int reached = 0;
+		for (int i = 1; i < thresholds.size(); i++) {
+			if (thresholds.get(i) <= value) reached++;
+		}
+		return reached;
 	}
 
 	/** Garden sources worth 1 XP per crop upgrade and milestone level, 5 per plot and Greenhouse upgrade, and so on. */
@@ -694,6 +734,14 @@ public class LevelPage implements GuiProfileViewerPage {
 			cropMilestones += milestone;
 		}
 		lines.add("Crop Upgrades", Math.min(cropUpgrades, 117), 117);
+		lines.add(
+			"Unique Visitors",
+			Math.min(milestonesReached(garden, "commission_data.unique_npcs_served", "misc.unique_visitors_served_milestone"), 16) * 3, 48
+		);
+		lines.add(
+			"Offers Accepted",
+			Math.min(milestonesReached(garden, "commission_data.total_completed", "misc.offers_accepted_milestone"), 30) * 3, 90
+		);
 		lines.add("Garden Crop Milestones", Math.min(cropMilestones, 598), 598);
 
 		JsonElement plots = garden.get("unlocked_plots_ids");
@@ -791,7 +839,10 @@ public class LevelPage implements GuiProfileViewerPage {
 			count(member, "winter_player_data.refined_jyrre_uses", misc, "refined_jyrre_xp") +
 			count(member, "garden_player_data.larva_consumed", misc, "wriggling_larva_xp") +
 			count(member, "events.easter.refined_dark_cacao_truffles", misc, "refined_dark_cacao_truffles_xp");
-		lines.add("Consumable Items", consumableXp, misc.get("consumable_items").getAsInt());
+		// Isopod husks and bee saliva: 2 XP per use, up to 5 uses each.
+		consumableXp += Math.min(5, Utils.getElementAsInt(Utils.getElement(member, "player_data.isopod_husks_eaten"), 0)) * 2;
+		consumableXp += Math.min(5, Utils.getElementAsInt(Utils.getElement(member, "player_data.bee_saliva_eaten"), 0)) * 2;
+		lines.add("Consumable Items", consumableXp, misc.get("consumable_items").getAsInt() + 20);
 
 		JsonElement trophies = Utils.getElement(member, "rift.gallery.secured_trophies");
 		lines.add(

@@ -196,6 +196,15 @@ public class GlacitePage implements GuiProfileViewerPage {
 	}
 
 	/** The highest milestone whose requirements are all met, counting from 1 (0 if none). */
+	/** The player's corpse milestone (0 to 7), from their looted corpses. */
+	public static int corpseMilestone(JsonObject profileInfo) {
+		int[] looted = new int[CORPSES.length];
+		for (int i = 0; i < CORPSES.length; i++) {
+			looted[i] = (int) Utils.getElementAsFloat(Utils.getElement(profileInfo, "glacite_player_data.corpses_looted." + CORPSES[i]), 0);
+		}
+		return corpseMilestone(looted);
+	}
+
 	private static int corpseMilestone(int[] looted) {
 		for (int m = CORPSE_MILESTONES.length - 1; m >= 0; m--) {
 			boolean met = true;
