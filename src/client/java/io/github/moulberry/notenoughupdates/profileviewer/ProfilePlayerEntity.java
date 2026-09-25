@@ -45,6 +45,9 @@ public class ProfilePlayerEntity extends RemotePlayer {
 
 	public ProfilePlayerEntity(ClientLevel level, UUID uuid, String name) {
 		super(level, new GameProfile(uuid, name));
+		// The entity is never added to a level, so it has no ID, and 26.2 throws when a mod (Feesh's glow check, for
+		// one) asks for it while the model is drawn. Any ID that no real entity uses will do.
+		setId(Integer.MAX_VALUE - 1);
 		// Show every outer skin layer (hat, jacket, sleeves, trousers), which the server would normally sync.
 		getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte) 0x7F);
 		requestProfile(uuid);

@@ -36,7 +36,7 @@ The first time you start the game, Better PV downloads the NotEnoughUpdates item
 | --- | --- |
 | `/pv [player]` | Opens the profile viewer for a player (yourself if no name is given). |
 | `/peek [player]` | Prints a quick summary of a player's stats in chat. |
-| `/bpv` | Opens the Better PV settings screen. The viewer also has a Settings button under it. |
+| `/bpv` | Opens the Better PV settings screen. The viewer also has a Settings button next to the player-name box. |
 
 ## Settings
 

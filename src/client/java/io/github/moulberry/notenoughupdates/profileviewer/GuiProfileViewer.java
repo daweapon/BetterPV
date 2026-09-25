@@ -239,11 +239,6 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		playerNameTextField.setValue(initialPlayerName);
 		playerNameTextField.setMaxLength(64);
 		this.addRenderableWidget(playerNameTextField);
-		this.addRenderableWidget(
-			net.minecraft.client.gui.components.Button.builder(
-				Component.literal("Settings"), button -> McCompat.setScreen(this.minecraft, new SettingsScreen(this))
-			).bounds(guiLeft + sizeX - 160, guiTop + sizeY + 5, 54, 20).build()
-		);
 	}
 
 	private static float getMaxLevelXp(JsonArray levels, int offset, int maxLevel) {
@@ -431,6 +426,15 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 					0x3FE0D0
 				);
 			}
+
+			// "Settings" button, styled like the two above; the click is handled in mouseClicked. It sits between
+			// them and the player-name box, so it works even before a profile has loaded.
+			int settingsX = guiLeft + sizeX - 206;
+			graphics.fill(settingsX, guiTop + sizeY + 3, settingsX + 100, guiTop + sizeY + 23, 0x80000000);
+			RenderUtils.drawTexturedRect(graphics, pv_dropdown, settingsX, guiTop + sizeY + 3, 100, 20, 0, 100 / 200f, 0, 20 / 185f);
+			RenderUtils.drawStringCenteredScaledMaxWidth(
+				graphics, "Settings", this.minecraft.font, settingsX + 50, guiTop + sizeY + 3 + 10, true, 90, 0x3FE0D0
+			);
 		}
 
 		if (pages.containsKey(page)) {
@@ -735,6 +739,13 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 		}
 
 		if (pages.containsKey(currentPage) && pages.get(currentPage).mouseClicked(event.x(), event.y(), event.button())) {
+			return true;
+		}
+
+		if (event.button() == 0 && currentPage != ProfileViewerPage.LOADING &&
+			Utils.isWithinRect(mouseX, mouseY, guiLeft + sizeX - 206, guiTop + sizeY + 3, 100, 20)) {
+			RenderUtils.playPressSound();
+			McCompat.setScreen(this.minecraft, new SettingsScreen(this));
 			return true;
 		}
 
