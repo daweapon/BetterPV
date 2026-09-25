@@ -1381,6 +1381,7 @@ public class ProfileViewer {
 			networth.clear();
 			networthBreakdown.clear();
 			networthSources.clear();
+			inventoryWarming.clear();
 			// Museum and garden are kept once loaded, but a failed load is asked for again.
 			museumInfoMap.entrySet().removeIf(entry -> {
 				boolean failed = entry.getValue().has("__error");
@@ -1534,10 +1535,17 @@ public class ProfileViewer {
 			if (inventoryWarming.add(key)) {
 				CompletableFuture.runAsync(() -> {
 					try {
+						// The heavy per-profile results the tabs read; warmed together so switching tabs doesn't stall.
 						getInventoryInfo(key);
+						getSkyblockInfo(key);
+						getCollectionInfo(key);
+						getPetsInfo(key);
+						getStats(key);
+						getPassiveStats(key);
 					} catch (RuntimeException ignored) {
 					} finally {
-						inventoryWarming.remove(key);
+						// Kept in the set once warmed, so it isn't redone every frame; retried if the data wasn't ready.
+						if (!inventoryCacheMap.containsKey(key)) inventoryWarming.remove(key);
 					}
 				});
 			}

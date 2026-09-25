@@ -357,6 +357,16 @@ public class BasicPage implements GuiProfileViewerPage {
 			if (Utils.isWithinRect(mouseX, mouseY, guiLeft + 63 - labelWidth / 2, guiTop + 33, labelWidth, fr.lineHeight + 2)) {
 				instance.tooltipToDisplay = networthTooltip(profile.getNetWorthBreakdown(profileId), networth);
 			}
+		} else if (!io.github.moulberry.notenoughupdates.util.BpvConfig.isHideNetWorth()) {
+			RenderUtils.drawStringCentered(
+				graphics,
+				ChatFormatting.GREEN + "Net Worth: " + ChatFormatting.GRAY + "Loading...",
+				fr,
+				guiLeft + 63,
+				guiTop + 38,
+				true,
+				0
+			);
 		}
 
 		if (status != null) {

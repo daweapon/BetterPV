@@ -408,6 +408,8 @@ public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 			);
 		}
 
+		if (getProfile() != null) getProfile().getInventoryInfoInBackground(getProfileId());
+
 		if (pages.containsKey(page)) {
 			// A page tripping over unexpected API data shouldn't take the whole game down: show an error in the
 			// panel instead, and log the stack trace once per page+error.
