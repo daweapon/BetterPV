@@ -1,5 +1,0 @@
-blank_issues_enabled: true
-contact_links:
-  - name: Report security vulnerabilities
-    url: https://github.com/daweapon/BetterPV/security/advisories/new
-    about: "If you wish to discuss a bug *with security implications* privately, please use GitHub's private vulnerability reporting."
