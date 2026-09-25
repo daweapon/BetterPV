@@ -296,7 +296,7 @@ public class BasicPage implements GuiProfileViewerPage {
 
 		drawPlayer(graphics, profile, profileId, guiLeft, guiTop, mouseX, mouseY);
 
-		long networth = profile.getNetWorth(profileId);
+		long networth = profile.getNetWorthInBackground(profileId);
 		if (networth > 0) {
 			RenderUtils.drawStringCentered(
 				graphics,

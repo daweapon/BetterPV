@@ -53,6 +53,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -672,16 +673,16 @@ public class ProfileViewer {
 	public class Profile {
 
 		private final String uuid;
-		private final HashMap<String, JsonObject> profileMap = new HashMap<>();
-		private final HashMap<String, JsonObject> petsInfoMap = new HashMap<>();
+		private final Map<String, JsonObject> profileMap = new ConcurrentHashMap<>();
+		private final Map<String, JsonObject> petsInfoMap = new ConcurrentHashMap<>();
 		private final HashMap<String, List<JsonObject>> coopProfileMap = new HashMap<>();
-		private final HashMap<String, Map<String, Level>> skyblockInfoCache = new HashMap<>();
-		private final HashMap<String, JsonObject> inventoryCacheMap = new HashMap<>();
-		private final HashMap<String, JsonObject> collectionInfoMap = new HashMap<>();
+		private final Map<String, Map<String, Level>> skyblockInfoCache = new ConcurrentHashMap<>();
+		private final Map<String, JsonObject> inventoryCacheMap = new ConcurrentHashMap<>();
+		private final Map<String, JsonObject> collectionInfoMap = new ConcurrentHashMap<>();
 		private final List<String> profileNames = new ArrayList<>();
-		private final HashMap<String, PlayerStats.Stats> stats = new HashMap<>();
-		private final HashMap<String, PlayerStats.Stats> passiveStats = new HashMap<>();
-		private final HashMap<String, Long> networth = new HashMap<>();
+		private final Map<String, PlayerStats.Stats> stats = new ConcurrentHashMap<>();
+		private final Map<String, PlayerStats.Stats> passiveStats = new ConcurrentHashMap<>();
+		private final Map<String, Long> networth = new ConcurrentHashMap<>();
 		private final AtomicBoolean updatingSkyblockProfilesState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingGuildInfoState = new AtomicBoolean(false);
 		private final AtomicBoolean updatingPlayerStatusState = new AtomicBoolean(false);
@@ -849,6 +850,32 @@ public class ProfileViewer {
 				// Unreadable: no items.
 			}
 			return items;
+		}
+
+		private final Map<String, Long> networthAttempts = new ConcurrentHashMap<>();
+
+		/**
+		 * The net worth if it has been worked out, else -1 while it is worked out in the background (it decodes the
+		 * whole inventory and museum, which freezes the game when done on the render thread). Retried once a second
+		 * until the prices and museum have loaded.
+		 */
+		public long getNetWorthInBackground(String profileName) {
+			String key = profileName == null ? latestProfile : profileName;
+			if (key == null) return -1;
+			Long cached = networth.get(key);
+			if (cached != null) return cached;
+			long now = System.currentTimeMillis();
+			Long last = networthAttempts.get(key);
+			if (last == null || now - last > 1000) {
+				networthAttempts.put(key, now);
+				CompletableFuture.runAsync(() -> {
+					try {
+						getNetWorth(key);
+					} catch (RuntimeException ignored) {
+					}
+				});
+			}
+			return -1;
 		}
 
 		public long getNetWorth(String profileName) {

@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * "Museum" tab, following SkyBlockPv's museum screens: one category per museum section, picked with the buttons down
@@ -137,7 +138,11 @@ public class MuseumPage implements GuiProfileViewerPage {
 	private int openSetX;
 	private int openSetY;
 
+	private record Loaded(JsonObject museum, Map<Category, List<Entry>> entries) {}
+
 	private JsonObject dataFor;
+	private volatile JsonObject loadingFor;
+	private volatile Loaded ready;
 	private final Map<Category, List<Entry>> entries = new HashMap<>();
 	private final Map<Category, ItemStack> categoryIcons = new HashMap<>();
 	/** Item stacks for the player's donated item JSON, made once each (see PetsPage#sortedPetIcons for why). */
@@ -302,8 +307,28 @@ public class MuseumPage implements GuiProfileViewerPage {
 			return;
 		}
 		if (dataFor != museum) {
+			// Decoding every donated item is slow enough to freeze the game, so it runs in the background.
+			Loaded done = ready;
+			if (done == null || done.museum() != museum) {
+				if (loadingFor != museum) {
+					loadingFor = museum;
+					ready = null;
+					CompletableFuture.runAsync(() -> {
+						Map<Category, List<Entry>> built;
+						try {
+							built = build(museum);
+						} catch (RuntimeException e) {
+							built = new HashMap<>();
+						}
+						// A newer load may have started meanwhile; only the latest may publish.
+						if (loadingFor == museum) ready = new Loaded(museum, built);
+					});
+				}
+				RenderUtils.drawStringCentered(graphics, "§eLoading museum...", font, centreX, centreY, true, 0xFFFFFF);
+				return;
+			}
 			resetCache();
-			load(museum);
+			entries.putAll(done.entries());
 			dataFor = museum;
 		}
 
@@ -661,7 +686,9 @@ public class MuseumPage implements GuiProfileViewerPage {
 		return parents;
 	}
 
-	private void load(JsonObject museum) {
+	/** Runs off the render thread; touches no page state. */
+	private Map<Category, List<Entry>> build(JsonObject museum) {
+		Map<Category, List<Entry>> entries = new HashMap<>();
 		ProfileViewer.Profile profile = GuiProfileViewer.getProfile();
 		JsonObject donatedItems = museum.get("items") instanceof JsonObject object ? object : new JsonObject();
 
@@ -713,6 +740,7 @@ public class MuseumPage implements GuiProfileViewerPage {
 			}
 		}
 		entries.put(Category.SPECIAL, special);
+		return entries;
 	}
 
 	private static long time(JsonObject donation) {
