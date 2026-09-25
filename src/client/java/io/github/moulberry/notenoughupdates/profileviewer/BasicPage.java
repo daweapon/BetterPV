@@ -574,5 +574,5 @@ public class BasicPage implements GuiProfileViewerPage {
 		);
 	}
 
-	private static final net.minecraft.resources.Identifier pv_basic = net.minecraft.resources.Identifier.parse("notenoughupdates:pv_basic.png");
+	private static final net.minecraft.resources.Identifier pv_basic = net.minecraft.resources.Identifier.parse("betterpv:pv_basic.png");
 }

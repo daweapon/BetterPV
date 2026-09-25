@@ -73,8 +73,8 @@ import java.util.regex.Pattern;
  */
 public class InventoriesPage implements GuiProfileViewerPage {
 
-	private static final Identifier pv_invs = Identifier.parse("notenoughupdates:pv_invs.png");
-	private static final Identifier pv_elements = Identifier.parse("notenoughupdates:pv_elements.png");
+	private static final Identifier pv_invs = Identifier.parse("betterpv:pv_invs.png");
+	private static final Identifier pv_elements = Identifier.parse("betterpv:pv_elements.png");
 	private static final Identifier CHEST_GUI_TEXTURE = Identifier.parse("textures/gui/container/generic_54.png");
 	private static final Pattern FISHING_SPEED_PATTERN = Pattern.compile("^Fishing Speed: \\+(\\d+)");
 

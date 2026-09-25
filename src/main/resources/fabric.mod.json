@@ -1,18 +1,20 @@
 {
 	"schemaVersion": 1,
-	"id": "notenoughupdates",
+	"id": "betterpv",
 	"version": "${version}",
 	"name": "Better PV",
-	"description": "A standalone Hypixel SkyBlock profile viewer, ported from NotEnoughUpdates (Forge 1.8.9) to Fabric 26.1.2. Use /pv, /neuprofile, /peek, or /cata.",
+	"description": "A standalone Hypixel SkyBlock profile viewer, ported from the NotEnoughUpdates Profile Viewer (Forge 1.8.9) to Fabric 26.1.2. Use /pv, /neuprofile, /peek or /cata.",
 	"authors": [
-		"Moulberry"
+		"daweapon",
+		"Moulberry and the NotEnoughUpdates contributors (original Profile Viewer)"
 	],
 	"contact": {
-		"homepage": "https://github.com/Moulberry/NotEnoughUpdates",
-		"sources": "https://github.com/Moulberry/NotEnoughUpdates"
+		"homepage": "https://github.com/daweapon/BetterPV",
+		"sources": "https://github.com/daweapon/BetterPV",
+		"issues": "https://github.com/daweapon/BetterPV/issues"
 	},
 	"license": "LGPL-3.0-or-later",
-	"icon": "assets/notenoughupdates/icon.png",
+	"icon": "assets/betterpv/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [

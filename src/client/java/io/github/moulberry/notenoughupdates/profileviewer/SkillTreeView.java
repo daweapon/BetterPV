@@ -49,8 +49,8 @@ import java.util.Map;
  */
 public final class SkillTreeView {
 
-	private static final Identifier TREES = Identifier.parse("notenoughupdates:profile_viewer/skill_trees.json");
-	private static final Identifier PERK_BACKGROUND = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_background.png");
+	private static final Identifier TREES = Identifier.parse("betterpv:profile_viewer/skill_trees.json");
+	private static final Identifier PERK_BACKGROUND = Identifier.parse("betterpv:profile_viewer/mining/perk_background.png");
 
 	/** One perk tree's node layout and the vanilla items its node states are drawn with. */
 	public record Tree(String title, String skill, String core, List<Node> nodes, int rows, TreeItems items) {

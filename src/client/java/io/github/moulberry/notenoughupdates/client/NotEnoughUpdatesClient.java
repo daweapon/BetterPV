@@ -36,7 +36,7 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 
 		// /pv is registered in a phase after every other mod's (the default phase, and SkyBlockPv's own late phase,
 		// which takes /pv over from Skyblocker the same way), so Better PV's /pv is the one that runs.
-		Identifier pvPhase = Identifier.fromNamespaceAndPath("notenoughupdates", "pv_command");
+		Identifier pvPhase = Identifier.fromNamespaceAndPath("betterpv", "pv_command");
 		ClientCommandRegistrationCallback.EVENT.addPhaseOrdering(Event.DEFAULT_PHASE, pvPhase);
 		ClientCommandRegistrationCallback.EVENT.addPhaseOrdering(Identifier.fromNamespaceAndPath("skyblock-pv", "skyblock_pv_command"), pvPhase);
 		ClientCommandRegistrationCallback.EVENT.register(pvPhase, (dispatcher, registryAccess) -> PvCommand.register(dispatcher));

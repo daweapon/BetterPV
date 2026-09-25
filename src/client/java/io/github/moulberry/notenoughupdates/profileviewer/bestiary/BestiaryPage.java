@@ -48,7 +48,7 @@ import java.util.Locale;
  */
 public class BestiaryPage implements GuiProfileViewerPage {
 
-	private static final Identifier BESTIARY_TEXTURE = Identifier.parse("notenoughupdates:pv_bestiary_tab.png");
+	private static final Identifier BESTIARY_TEXTURE = Identifier.parse("betterpv:pv_bestiary_tab.png");
 	private static final NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
 
 	private static final int MOB_X_COUNT = 9;

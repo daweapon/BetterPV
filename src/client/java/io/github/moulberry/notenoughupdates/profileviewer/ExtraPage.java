@@ -51,7 +51,7 @@ import java.util.TreeMap;
  */
 public class ExtraPage implements GuiProfileViewerPage {
 
-	private static final Identifier pv_extra = Identifier.parse("notenoughupdates:pv_extra.png");
+	private static final Identifier pv_extra = Identifier.parse("betterpv:pv_extra.png");
 
 	private final GuiProfileViewer instance;
 	private TreeMap<Integer, Set<String>> topKills = null;

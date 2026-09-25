@@ -73,7 +73,7 @@ public class Panorama {
 		Identifier[] specific = new Identifier[6];
 		boolean specificExists = true;
 		for (int i = 0; i < 6; i++) {
-			specific[i] = Identifier.parse("notenoughupdates:panoramas/" + location + "_" + identifier + "/panorama_" + i + ".jpg");
+			specific[i] = Identifier.parse("betterpv:panoramas/" + location + "_" + identifier + "/panorama_" + i + ".jpg");
 			if (Minecraft.getInstance().getResourceManager().getResource(specific[i]).isEmpty()) specificExists = false;
 		}
 		if (specificExists) {
@@ -84,7 +84,7 @@ public class Panorama {
 		Identifier[] fallback = new Identifier[6];
 		boolean fallbackExists = true;
 		for (int i = 0; i < 6; i++) {
-			fallback[i] = Identifier.parse("notenoughupdates:panoramas/" + location + "/panorama_" + i + ".jpg");
+			fallback[i] = Identifier.parse("betterpv:panoramas/" + location + "/panorama_" + i + ".jpg");
 			if (Minecraft.getInstance().getResourceManager().getResource(fallback[i]).isEmpty()) fallbackExists = false;
 		}
 		if (fallbackExists) {
@@ -94,7 +94,7 @@ public class Panorama {
 
 		Identifier[] unknown = new Identifier[6];
 		for (int i = 0; i < 6; i++) {
-			unknown[i] = Identifier.parse("notenoughupdates:panoramas/unknown/panorama_" + i + ".jpg");
+			unknown[i] = Identifier.parse("betterpv:panoramas/unknown/panorama_" + i + ".jpg");
 		}
 		panoramasMap.put(key, unknown);
 		return unknown;

@@ -65,8 +65,8 @@ import java.util.Map;
  */
 public class PetsPage implements GuiProfileViewerPage {
 
-	private static final Identifier pv_pets = Identifier.parse("notenoughupdates:pv_pets.png");
-	private static final Identifier pv_elements = Identifier.parse("notenoughupdates:pv_elements.png");
+	private static final Identifier pv_pets = Identifier.parse("betterpv:pv_pets.png");
+	private static final Identifier pv_elements = Identifier.parse("betterpv:pv_elements.png");
 	private static final int COLLS_XCOUNT = 5;
 	private static final int COLLS_YCOUNT = 4;
 	private static final float COLLS_XPADDING = (190 - COLLS_XCOUNT * 20) / (float) (COLLS_XCOUNT + 1);

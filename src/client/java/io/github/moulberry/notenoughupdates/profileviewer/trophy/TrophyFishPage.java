@@ -63,7 +63,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class TrophyFishPage implements GuiProfileViewerPage {
 
-	private static final Identifier TROPHY_FISH_TEXTURE = Identifier.parse("notenoughupdates:pv_trophy_fish_tab.png");
+	private static final Identifier TROPHY_FISH_TEXTURE = Identifier.parse("betterpv:pv_trophy_fish_tab.png");
 
 	private static final Map<String, ChatFormatting> internalTrophyFish = new HashMap<>();
 

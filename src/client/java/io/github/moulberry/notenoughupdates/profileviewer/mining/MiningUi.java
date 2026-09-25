@@ -33,7 +33,7 @@ public final class MiningUi {
 	/** Height of a panel's title strip. */
 	public static final int PANEL_TITLE = 14;
 
-	private static final Identifier SLOT = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_background.png");
+	private static final Identifier SLOT = Identifier.parse("betterpv:profile_viewer/mining/perk_background.png");
 
 	private MiningUi() {
 	}

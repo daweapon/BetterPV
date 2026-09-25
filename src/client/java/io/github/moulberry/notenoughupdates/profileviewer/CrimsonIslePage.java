@@ -42,7 +42,7 @@ import java.util.Map;
  */
 public class CrimsonIslePage implements GuiProfileViewerPage {
 
-	private static final Identifier CRIMSON_ISLE = Identifier.parse("notenoughupdates:pv_crimson_isle_page.png");
+	private static final Identifier CRIMSON_ISLE = Identifier.parse("betterpv:pv_crimson_isle_page.png");
 	private static final int WIDTH = 431;
 	private static final int HEIGHT = 202;
 

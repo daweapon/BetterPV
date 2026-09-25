@@ -66,8 +66,8 @@ public class LevelPage implements GuiProfileViewerPage {
 	/** SkyBlock XP of a fully maxed profile (level 620.16): the level bar turns rainbow from here. */
 	public static final int MAX_EXPERIENCE = 62_016;
 
-	private static final Identifier pv_levels = Identifier.parse("notenoughupdates:pv_levels.png");
-	private static final Identifier pv_elements = Identifier.parse("notenoughupdates:pv_elements.png");
+	private static final Identifier pv_levels = Identifier.parse("betterpv:pv_levels.png");
+	private static final Identifier pv_elements = Identifier.parse("betterpv:pv_elements.png");
 
 	/** Skill -> level cap; each skill level is worth 5 XP to level 10, 10 to 25, 20 to 50 and 30 to 60. */
 	private static final Map<String, Integer> SKILL_CAPS = new LinkedHashMap<>();

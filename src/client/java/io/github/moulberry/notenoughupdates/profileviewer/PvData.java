@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 
 /**
  * Data helpers for the tabs built on SkyBlockPv's repo data (garden, chocolate factory, rift): the bundled JSON
- * files in {@code assets/notenoughupdates/profile_viewer/}, item lookup, SkyBlockPv's text tags and reward
+ * files in {@code assets/betterpv/profile_viewer/}, item lookup, SkyBlockPv's text tags and reward
  * formulas, and its cumulative cost lists.
  */
 public final class PvData {
@@ -78,7 +78,7 @@ public final class PvData {
 	/** {@code profile_viewer/<name>.json}, read once; an empty object if it's missing. */
 	public static JsonObject bundled(String name) {
 		return BUNDLED.computeIfAbsent(name, key -> {
-			Identifier id = Identifier.parse("notenoughupdates:profile_viewer/" + key + ".json");
+			Identifier id = Identifier.parse("betterpv:profile_viewer/" + key + ".json");
 			try (Reader reader = new java.io.InputStreamReader(
 				Minecraft.getInstance().getResourceManager().open(id), StandardCharsets.UTF_8)) {
 				return JsonParser.parseReader(reader).getAsJsonObject();

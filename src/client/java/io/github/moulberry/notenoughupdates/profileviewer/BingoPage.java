@@ -43,7 +43,7 @@ import java.util.List;
  */
 public class BingoPage implements GuiProfileViewerPage {
 
-	private static final Identifier BINGO_GUI_TEXTURE = Identifier.parse("notenoughupdates:pv_bingo_tab.png");
+	private static final Identifier BINGO_GUI_TEXTURE = Identifier.parse("betterpv:pv_bingo_tab.png");
 
 	private final GuiProfileViewer instance;
 	private long lastResourceRequest;

@@ -65,8 +65,8 @@ import java.util.UUID;
  */
 public class DungeonPage implements GuiProfileViewerPage {
 
-	private static final Identifier pv_dung = Identifier.parse("notenoughupdates:pv_dung.png");
-	private static final Identifier pv_elements = Identifier.parse("notenoughupdates:pv_elements.png");
+	private static final Identifier pv_dung = Identifier.parse("betterpv:pv_dung.png");
+	private static final Identifier pv_elements = Identifier.parse("betterpv:pv_elements.png");
 	private static final ItemStack DEADBUSH = new ItemStack(Blocks.DEAD_BUSH);
 	private static final String[] dungSkillsName = { "Healer", "Mage", "Berserk", "Archer", "Tank" };
 	private static final ItemStack[] BOSS_HEADS = new ItemStack[7];

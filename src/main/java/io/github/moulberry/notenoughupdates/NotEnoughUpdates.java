@@ -8,9 +8,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
+/**
+ * Licensing note on the bundled Hypixel assets: everything under {@code assets/hypixel_skyblock} (item models and
+ * textures, about 6 MB) comes from Hypixel's official SkyBlock Resource Pack, copyright Hypixel Inc., and is kept
+ * next to its LICENSE file. That licence forbids use in "your own business, product or service" but allows
+ * "websites and apps that are Hypixel related ... as long as it is not sold". Better PV is a free, Hypixel-related
+ * mod, so it is bundled on that reading. It is a judgement call, not a permission from Hypixel: a distribution
+ * site's moderators or Hypixel could disagree. If anyone objects, delete the {@code hypixel_skyblock} folder (and
+ * the README credit line); the trophy fish and item icons then fall back to vanilla item textures.
+ */
 public class NotEnoughUpdates implements ModInitializer {
-	public static final String MOD_ID = "notenoughupdates";
+	public static final String MOD_ID = "betterpv";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final String VERSION = "1.0.0";
 
@@ -41,8 +53,23 @@ public class NotEnoughUpdates implements ModInitializer {
 		INSTANCE = this;
 		LOGGER.info("NotEnoughUpdates (Fabric 26.1.2 port scaffold) initializing");
 
-		File configDir = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID).toFile();
+		Path configRoot = FabricLoader.getInstance().getConfigDir();
+		migrateLegacyConfigDir(configRoot.resolve("notenoughupdates"), configRoot.resolve(MOD_ID));
+		File configDir = configRoot.resolve(MOD_ID).toFile();
 		manager = new NEUManager(this, configDir);
+	}
+
+	/** Before the mod id became "betterpv" the config, API key and item repo lived in config/notenoughupdates. */
+	private static void migrateLegacyConfigDir(Path legacy, Path current) {
+		if (!Files.isDirectory(legacy) || Files.exists(current)) {
+			return;
+		}
+		try {
+			Files.move(legacy, current);
+			LOGGER.info("Moved the config folder {} to {}", legacy, current);
+		} catch (IOException e) {
+			LOGGER.warn("Could not move the old config folder {}; starting with a fresh one", legacy, e);
+		}
 	}
 
 	public io.github.moulberry.notenoughupdates.profileviewer.ProfileViewer getProfileViewer() {

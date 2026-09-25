@@ -55,7 +55,7 @@ public class HotfPage implements GuiProfileViewerPage {
 	private static final int TIER_GAP = 6;
 	private static final int TREE_COLUMNS = 7;
 
-	private static final Identifier PERK_BACKGROUND = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_background.png");
+	private static final Identifier PERK_BACKGROUND = Identifier.parse("betterpv:profile_viewer/mining/perk_background.png");
 
 	private final GuiProfileViewer instance;
 	private ItemStack skull;

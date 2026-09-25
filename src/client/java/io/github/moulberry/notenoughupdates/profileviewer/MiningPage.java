@@ -62,10 +62,10 @@ import java.util.TreeMap;
  */
 public class MiningPage implements GuiProfileViewerPage {
 
-	private static final Identifier BACKGROUND = Identifier.parse("notenoughupdates:profile_viewer/mining/background.png");
-	private static final Identifier PERK_BACKGROUND = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_background.png");
-	private static final Identifier PERK_CONNECTION_X = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_connection_x.png");
-	private static final Identifier PERK_CONNECTION_Y = Identifier.parse("notenoughupdates:profile_viewer/mining/perk_connection_y.png");
+	private static final Identifier BACKGROUND = Identifier.parse("betterpv:profile_viewer/mining/background.png");
+	private static final Identifier PERK_BACKGROUND = Identifier.parse("betterpv:profile_viewer/mining/perk_background.png");
+	private static final Identifier PERK_CONNECTION_X = Identifier.parse("betterpv:profile_viewer/mining/perk_connection_x.png");
+	private static final Identifier PERK_CONNECTION_Y = Identifier.parse("betterpv:profile_viewer/mining/perk_connection_y.png");
 
 	private static final Map<String, ChatFormatting> CRYSTAL_COLOURS = new LinkedHashMap<>();
 	static {

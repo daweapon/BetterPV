@@ -92,13 +92,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GuiProfileViewer extends net.minecraft.client.gui.screens.Screen {
 
-	public static final Identifier pv_dropdown = Identifier.parse("notenoughupdates:pv_dropdown.png");
-	public static final Identifier pv_bg = Identifier.parse("notenoughupdates:pv_bg.png");
-	public static final Identifier pv_elements = Identifier.parse("notenoughupdates:pv_elements.png");
-	public static final Identifier pv_ironman = Identifier.parse("notenoughupdates:pv_ironman.png");
-	public static final Identifier pv_bingo = Identifier.parse("notenoughupdates:pv_bingo.png");
-	public static final Identifier pv_stranded = Identifier.parse("notenoughupdates:pv_stranded.png");
-	public static final Identifier pv_unknown = Identifier.parse("notenoughupdates:pv_unknown.png");
+	public static final Identifier pv_dropdown = Identifier.parse("betterpv:pv_dropdown.png");
+	public static final Identifier pv_bg = Identifier.parse("betterpv:pv_bg.png");
+	public static final Identifier pv_elements = Identifier.parse("betterpv:pv_elements.png");
+	public static final Identifier pv_ironman = Identifier.parse("betterpv:pv_ironman.png");
+	public static final Identifier pv_bingo = Identifier.parse("betterpv:pv_bingo.png");
+	public static final Identifier pv_stranded = Identifier.parse("betterpv:pv_stranded.png");
+	public static final Identifier pv_unknown = Identifier.parse("betterpv:pv_unknown.png");
 
 	public static final java.text.NumberFormat numberFormat = java.text.NumberFormat.getInstance(Locale.US);
 
