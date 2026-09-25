@@ -12,6 +12,7 @@ Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 2
 - Storage, sacks, wardrobe and loadouts
 - Farming and the garden, foraging, Crimson Isle, museum, chocolate factory and the Rift
 - Recently viewed players, and right-clicking a name in SkyBlock chat to open their profile
+- A settings screen (`/bpv`) to turn tabs on or off, pick the opening tab, abbreviate big numbers and hide net worth
 - No API key needed
 
 ...and many more!
@@ -35,6 +36,17 @@ The first time you start the game, Better PV downloads the NotEnoughUpdates item
 | --- | --- |
 | `/pv [player]` | Opens the profile viewer for a player (yourself if no name is given). |
 | `/peek [player]` | Prints a quick summary of a player's stats in chat. |
+| `/bpv` | Opens the Better PV settings screen. The viewer also has a Settings button under it. |
+
+## Settings
+
+`/bpv` opens a settings screen in the style of NotEnoughUpdates' old config menu. Everything saves the moment you change it, to `config/betterpv/config.json`.
+
+- **Opening Tab:** reopen on the last tab you used, or always start on a tab you pick. Applies when the viewer is opened from `/pv` or a chat click.
+- **Short Numbers:** show big numbers abbreviated (12.3m instead of 12,345,678).
+- **Hide Net Worth:** hide the net worth and its breakdown on the Your Skills tab.
+- **Chat Right-Click:** turn the right-click-a-name feature in SkyBlock chat on or off.
+- **Tabs:** switch any tab off except Your Skills. Hidden tabs still load their data, since other pages (such as the Level page) read it.
 
 ## Credits
 
