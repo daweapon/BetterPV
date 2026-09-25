@@ -106,15 +106,29 @@ public class NEUManager {
 	private final Map<String, ItemStack> itemStackCache = new HashMap<>();
 
 	/** Item renames after the 1.13 flattening, which {@code ItemStackTheFlatteningFix} doesn't cover. */
-	private static final Map<String, String> POST_FLATTENING_RENAMES = Map.of(
-		"minecraft:sign", "minecraft:oak_sign",
-		"minecraft:melon_block", "minecraft:melon",
-		"minecraft:rose_red", "minecraft:red_dye",
-		"minecraft:dandelion_yellow", "minecraft:yellow_dye",
-		"minecraft:cactus_green", "minecraft:green_dye",
-		"minecraft:grass", "minecraft:short_grass",
-		"minecraft:scute", "minecraft:turtle_scute",
-		"minecraft:zombie_pigman_spawn_egg", "minecraft:zombified_piglin_spawn_egg"
+	private static final Map<String, String> POST_FLATTENING_RENAMES = Map.ofEntries(
+		Map.entry("minecraft:sign", "minecraft:oak_sign"),
+		Map.entry("minecraft:melon_block", "minecraft:melon"),
+		Map.entry("minecraft:rose_red", "minecraft:red_dye"),
+		Map.entry("minecraft:dandelion_yellow", "minecraft:yellow_dye"),
+		Map.entry("minecraft:cactus_green", "minecraft:green_dye"),
+		Map.entry("minecraft:grass", "minecraft:short_grass"),
+		Map.entry("minecraft:scute", "minecraft:turtle_scute"),
+		Map.entry("minecraft:zombie_pigman_spawn_egg", "minecraft:zombified_piglin_spawn_egg"),
+		Map.entry("minecraft:clownfish", "minecraft:tropical_fish"),
+		Map.entry("minecraft:mob_spawner", "minecraft:spawner"),
+		Map.entry("minecraft:speckled_melon", "minecraft:glistering_melon_slice")
+	);
+
+	/** 1.8 spawn eggs carry the entity's numeric id as their damage; the flattening fix leaves them as "spawn_egg". */
+	private static final Map<Integer, String> LEGACY_SPAWN_EGGS = Map.ofEntries(
+		Map.entry(50, "creeper"), Map.entry(51, "skeleton"), Map.entry(52, "spider"), Map.entry(54, "zombie"),
+		Map.entry(55, "slime"), Map.entry(56, "ghast"), Map.entry(57, "zombified_piglin"), Map.entry(58, "enderman"),
+		Map.entry(59, "cave_spider"), Map.entry(60, "silverfish"), Map.entry(61, "blaze"), Map.entry(62, "magma_cube"),
+		Map.entry(65, "bat"), Map.entry(66, "witch"), Map.entry(67, "endermite"), Map.entry(68, "guardian"),
+		Map.entry(90, "pig"), Map.entry(91, "sheep"), Map.entry(92, "cow"), Map.entry(93, "chicken"),
+		Map.entry(94, "squid"), Map.entry(95, "wolf"), Map.entry(96, "mooshroom"), Map.entry(98, "ocelot"),
+		Map.entry(100, "horse"), Map.entry(101, "rabbit"), Map.entry(120, "villager")
 	);
 
 	public NEUManager(NotEnoughUpdates neu, File configLocation) {
@@ -372,8 +386,9 @@ public class NEUManager {
 
 		// See class javadoc on jsonToStack: skulls (damage 3) cover the overwhelming majority of non-vanilla
 		// repo item icons, since they carry a custom texture via the SkullOwner NBT tag applied afterwards.
-		if (itemid.endsWith(":skull") || itemid.endsWith(":mob_head") || itemid.endsWith(":player_head")) {
-			return new ItemStack(damage == 3 || itemid.endsWith(":player_head") ? Items.PLAYER_HEAD : Items.BARRIER);
+		// Other skull damages (skeleton, wither skeleton, zombie, creeper) are vanilla heads the flattening maps.
+		if (itemid.endsWith(":player_head") || (itemid.endsWith(":skull") && damage == 3)) {
+			return new ItemStack(Items.PLAYER_HEAD);
 		}
 
 		// Repo and Hypixel item ids are 1.8 names with a damage subtype (e.g. minecraft:stained_glass + 5). Vanilla's
@@ -381,6 +396,9 @@ public class NEUManager {
 		String flattened = ItemStackTheFlatteningFix.updateItem(itemid, damage);
 		if (flattened != null) itemid = flattened;
 		itemid = POST_FLATTENING_RENAMES.getOrDefault(itemid, itemid);
+		if (itemid.equals("minecraft:spawn_egg")) {
+			itemid = "minecraft:" + LEGACY_SPAWN_EGGS.getOrDefault(damage, "pig") + "_spawn_egg";
+		}
 
 		Item item = itemById(itemid);
 		if (item == null) {
