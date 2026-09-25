@@ -2,6 +2,20 @@
 
 Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 26.1.2. Type `/pv <player>` to see any player's SkyBlock profile in game: skills, dungeons, collections, pets, storage, Heart of the Mountain, trophy fish, bestiary, farming and the garden, foraging, loadouts, museum, chocolate factory, the Rift and more. There's no stats website to open, and **no API key is needed**.
 
+<p align="center"><img src="docs/screenshot.png" alt="Better PV showing a player's skills, SkyBlock level and 3D model" width="720"></p>
+
+## Features
+
+- Skills, slayers, SkyBlock level and net worth on one page, with a 3D model of the player
+- A SkyBlock Level breakdown showing where every point of XP comes from
+- Dungeons, collections, pets, Heart of the Mountain, bestiary and trophy fish
+- Storage, sacks, wardrobe and loadouts
+- Farming and the garden, foraging, Crimson Isle, museum, chocolate factory and the Rift
+- Recently viewed players, and right-clicking a name in SkyBlock chat to open their profile
+- No API key needed
+
+...and many more!
+
 ## Installing
 
 1. Install [Fabric Loader](https://fabricmc.net/use/) 0.19.3 or newer for Minecraft 26.1.2. The Minecraft launcher provides the Java 25 it needs.
