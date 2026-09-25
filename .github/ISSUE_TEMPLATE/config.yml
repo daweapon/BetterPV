@@ -1,8 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: NEU Support
-    url: https://discord.gg/moulberry
-    about: "Please ask for support in #neu-support on Moulberry's discord."
   - name: Report security vulnerabilities
-    url: https://discord.gg/moulberry
-    about: "If you wish to discuss a bug *with security implications* privately, please open a ticket in Moulberry's discord using /new in #bot-commands"
+    url: https://github.com/daweapon/BetterPV/security/advisories/new
+    about: "If you wish to discuss a bug *with security implications* privately, please use GitHub's private vulnerability reporting."

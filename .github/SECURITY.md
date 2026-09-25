@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-The following versions of the mod support security updates.
+Only the latest release of Better PV gets security fixes. Please update before reporting a problem.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| < 2.0   | :x:                |
-| 2.0.x   | :white_check_mark: |
-| 2.1.x   | :white_check_mark: |
+## Reporting a Vulnerability
+
+Please report vulnerabilities privately with the "Report a vulnerability" button on the
+[Security tab](https://github.com/daweapon/BetterPV/security/advisories/new) of this repository,
+rather than in a public issue.
