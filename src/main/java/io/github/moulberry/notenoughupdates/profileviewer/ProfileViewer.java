@@ -1304,6 +1304,12 @@ public class ProfileViewer {
 			});
 		}
 
+		private static final Map<String, Integer> SKILL_MAX_CAPS = Map.of(
+			"taming", 60,
+			"foraging", 57,
+			"farming", 60
+		);
+
 		public int getCap(JsonObject leveling, String skillName) {
 			JsonElement capsElement = Utils.getElement(leveling, "leveling_caps");
 			return capsElement != null && capsElement.isJsonObject() && capsElement.getAsJsonObject().has(skillName)
@@ -1356,12 +1362,13 @@ public class ProfileViewer {
 					levelingArray = Utils.getElement(leveling, "social").getAsJsonArray();
 				}
 
-				int maxLevel = getCap(leveling, skillName);
+				// XP stops accruing at a player's real cap, so the highest cap the game allows is safe to use. The
+				// repo's caps and the profile's cap fields (taming, foraging) lag behind the game's.
+				int maxLevel = Math.max(getCap(leveling, skillName), SKILL_MAX_CAPS.getOrDefault(skillName, 0));
 				if (skillName.equals("farming")) {
-					maxLevel += Utils.getElementAsInt(Utils.getElement(profileInfo, "jacob2.perks.farming_level_cap"), 0);
+					maxLevel = Math.max(maxLevel, 50 + Utils.getElementAsInt(Utils.getElement(profileInfo, "jacob2.perks.farming_level_cap"), 0));
 				} else if (skillName.equals("foraging")) {
-					// Foraging's cap can be raised past 50 (player_data.experience.SKILL_FORAGING_extra_level_cap).
-					maxLevel += Utils.getElementAsInt(Utils.getElement(profileInfo, "experience_skill_foraging_extra_level_cap"), 0);
+					maxLevel = Math.max(maxLevel, 50 + Utils.getElementAsInt(Utils.getElement(profileInfo, "experience_skill_foraging_extra_level_cap"), 0));
 				}
 				out.put(skillName, getLevel(levelingArray, skillExperience, maxLevel, false));
 			}
