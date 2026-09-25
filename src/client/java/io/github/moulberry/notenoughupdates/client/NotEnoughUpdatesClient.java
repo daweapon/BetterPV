@@ -41,6 +41,8 @@ public class NotEnoughUpdatesClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.addPhaseOrdering(Identifier.fromNamespaceAndPath("skyblock-pv", "skyblock_pv_command"), pvPhase);
 		ClientCommandRegistrationCallback.EVENT.register(pvPhase, (dispatcher, registryAccess) -> PvCommand.register(dispatcher));
 
+		ChatProfileClick.register();
+
 		// Lets BpvBackend prove who the player is, using the Mojang-certified profile key pair vanilla uses for
 		// chat signing. prepareKeyPair() is asked for on the render thread, where vanilla itself calls it.
 		BpvBackend.setKeySource(() -> {
