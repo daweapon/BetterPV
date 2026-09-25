@@ -174,9 +174,11 @@ public class BasicPage implements GuiProfileViewerPage {
 
 		String key = uuid + "/" + profileId;
 		if (playerEntity == null || !key.equals(playerEntityFor) || playerEntity.level() != minecraft.level) {
+			JsonObject inventoryInfo = profile.getInventoryInfoInBackground(profileId);
+			if (inventoryInfo == null) return;
 			String name = Utils.getElementAsString(Utils.getElement(profile.getHypixelProfile(), "displayname"), "Player");
 			ProfilePlayerEntity entity = new ProfilePlayerEntity(minecraft.level, uuid, name);
-			JsonElement armor = Utils.getElement(profile.getInventoryInfo(profileId), "inv_armor");
+			JsonElement armor = Utils.getElement(inventoryInfo, "inv_armor");
 			if (armor != null && armor.isJsonArray()) {
 				for (int i = 0; i < Math.min(ARMOR_SLOTS.length, armor.getAsJsonArray().size()); i++) {
 					JsonElement item = armor.getAsJsonArray().get(i);

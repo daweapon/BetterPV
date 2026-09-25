@@ -880,6 +880,7 @@ public class ProfileViewer {
 		}
 
 		private final Map<String, Long> networthAttempts = new ConcurrentHashMap<>();
+		private final Map<String, Integer> networthSources = new ConcurrentHashMap<>();
 
 		/**
 		 * The net worth if it has been worked out, else -1 while it is worked out in the background (it decodes the
@@ -890,19 +891,21 @@ public class ProfileViewer {
 			String key = profileName == null ? latestProfile : profileName;
 			if (key == null) return -1;
 			Long cached = networth.get(key);
-			if (cached != null) return cached;
+			int sources = manager.auctionManager.getPriceSourcesLoaded();
+			Integer computedWith = networthSources.get(key);
+			if (cached != null && computedWith != null && computedWith == sources) return cached;
 			long now = System.currentTimeMillis();
 			Long last = networthAttempts.get(key);
 			if (last == null || now - last > 1000) {
 				networthAttempts.put(key, now);
 				CompletableFuture.runAsync(() -> {
 					try {
-						getNetWorth(key);
+						getNetWorth(key, true);
 					} catch (RuntimeException ignored) {
 					}
 				});
 			}
-			return -1;
+			return cached != null ? cached : -1;
 		}
 
 		/** The net worth split by source, or an empty map until getNetWorth has worked it out. */
@@ -913,9 +916,15 @@ public class ProfileViewer {
 		}
 
 		public long getNetWorth(String profileName) {
+			return getNetWorth(profileName, false);
+		}
+
+		/** With recompute, an existing total is redone (prices may have loaded since it was cached). */
+		private long getNetWorth(String profileName, boolean recompute) {
 			if (profileName == null) profileName = latestProfile;
-			if (networth.get(profileName) != null) return networth.get(profileName);
+			if (!recompute && networth.get(profileName) != null) return networth.get(profileName);
 			if (!manager.auctionManager.isPricingReady()) return -1;
+			int sources = manager.auctionManager.getPriceSourcesLoaded();
 			if (getProfileInformation(profileName) == null) return -1;
 			if (getInventoryInfo(profileName) == null) return -1;
 			JsonObject museumInfo = getMuseumInfo(profileName);
@@ -1085,6 +1094,7 @@ public class ProfileViewer {
 
 			this.networthBreakdown.put(profileName, breakdown);
 			this.networth.put(profileName, networth);
+			networthSources.put(profileName, sources);
 			return networth;
 		}
 
@@ -1370,6 +1380,7 @@ public class ProfileViewer {
 			collectionInfoMap.clear();
 			networth.clear();
 			networthBreakdown.clear();
+			networthSources.clear();
 			// Museum and garden are kept once loaded, but a failed load is asked for again.
 			museumInfoMap.entrySet().removeIf(entry -> {
 				boolean failed = entry.getValue().has("__error");
@@ -1510,6 +1521,27 @@ public class ProfileViewer {
 			skyblockInfoCache.put(profileName, out);
 
 			return out;
+		}
+
+		private final Set<String> inventoryWarming = ConcurrentHashMap.newKeySet();
+
+		/** The decoded inventories if ready, else null while they are decoded off the render thread. */
+		public JsonObject getInventoryInfoInBackground(String profileName) {
+			String key = profileName == null ? latestProfile : profileName;
+			if (key == null) return null;
+			JsonObject cached = inventoryCacheMap.get(key);
+			if (cached != null) return cached;
+			if (inventoryWarming.add(key)) {
+				CompletableFuture.runAsync(() -> {
+					try {
+						getInventoryInfo(key);
+					} catch (RuntimeException ignored) {
+					} finally {
+						inventoryWarming.remove(key);
+					}
+				});
+			}
+			return null;
 		}
 
 		public JsonObject getInventoryInfo(String profileName) {

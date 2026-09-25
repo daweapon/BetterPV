@@ -48,6 +48,7 @@ public class APIManager {
 	private JsonObject auctionPricesAvgLowestBinJson = null;
 	private JsonObject bazaarJson = null;
 	private JsonObject auctionPricesJson = null;
+	private final java.util.concurrent.atomic.AtomicInteger priceSourcesLoaded = new java.util.concurrent.atomic.AtomicInteger();
 
 	private static final List<String> hardcodedVanillaItems = Utils.createList(
 		"WOOD_AXE", "WOOD_HOE", "WOOD_PICKAXE", "WOOD_SPADE", "WOOD_SWORD",
@@ -64,6 +65,11 @@ public class APIManager {
 	/** True once both Bazaar and auction prices are available for a complete profile calculation. */
 	public boolean isPricingReady() {
 		return bazaarJson != null && (coflLowestBins != null || lowestBins != null || auctionPricesAvgLowestBinJson != null);
+	}
+
+	/** Counts price sources that have loaded for the first time, so cached totals from partial prices can be redone. */
+	public int getPriceSourcesLoaded() {
+		return priceSourcesLoaded.get();
 	}
 
 	public long getLowestBin(String internalName) {
@@ -114,7 +120,9 @@ public class APIManager {
 			.url("https://sky.coflnet.com/api/prices/neu")
 			.requestJson()
 			.thenAccept(jsonObject -> {
-				if (jsonObject != null) coflLowestBins = jsonObject;
+				if (jsonObject == null) return;
+					if (coflLowestBins == null) priceSourcesLoaded.incrementAndGet();
+					coflLowestBins = jsonObject;
 			});
 		manager.apiUtils
 			.request()
@@ -166,7 +174,10 @@ public class APIManager {
 		manager.apiUtils
 			.newMoulberryRequest("auction_averages_lbin/1day.json.gz")
 			.gunzip().requestJson()
-			.thenAccept((jsonObject) -> auctionPricesAvgLowestBinJson = jsonObject);
+			.thenAccept((jsonObject) -> {
+					if (jsonObject != null && auctionPricesAvgLowestBinJson == null) priceSourcesLoaded.incrementAndGet();
+					auctionPricesAvgLowestBinJson = jsonObject;
+				});
 	}
 
 	public double getBazaarOrBin(String internalName) {
@@ -232,7 +243,8 @@ public class APIManager {
 						newBazaarJson.add(transformHypixelBazaarToNEUItemId(entry.getKey()), productInfo);
 					}
 				}
-				bazaarJson = newBazaarJson;
+				if (bazaarJson == null) priceSourcesLoaded.incrementAndGet();
+					bazaarJson = newBazaarJson;
 			});
 	}
 
