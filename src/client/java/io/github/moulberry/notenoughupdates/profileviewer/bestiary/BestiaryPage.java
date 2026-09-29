@@ -36,7 +36,6 @@ import net.minecraft.world.item.ItemStack;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * The Bestiary tab, ported from current NEU. Categories come from {@code bestiary.json} via {@link BestiaryData}.

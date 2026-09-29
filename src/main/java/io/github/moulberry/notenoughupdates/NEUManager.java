@@ -50,7 +50,6 @@ import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.component.ResolvableProfile;
 
 import java.io.File;
@@ -62,7 +61,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
 /**

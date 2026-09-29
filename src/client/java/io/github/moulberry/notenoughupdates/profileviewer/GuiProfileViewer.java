@@ -32,7 +32,6 @@ import io.github.moulberry.notenoughupdates.util.PetData;
 import io.github.moulberry.notenoughupdates.util.RenderUtils;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
@@ -56,7 +55,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * The profile viewer screen. Uses vanilla's menu blur for the backdrop and an {@link EditBox} for the name

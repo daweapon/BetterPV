@@ -28,7 +28,6 @@ import io.github.moulberry.notenoughupdates.profileviewer.GuiProfileViewer;
 import io.github.moulberry.notenoughupdates.profileviewer.PvData;
 import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.HashMap;

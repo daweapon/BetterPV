@@ -19,8 +19,6 @@
 
 package io.github.moulberry.notenoughupdates.profileviewer;
 
-import com.google.common.base.Splitter;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.github.moulberry.notenoughupdates.NotEnoughUpdates;

@@ -560,7 +560,6 @@ public class LevelPage implements GuiProfileViewerPage {
 		JsonObject skill = sb.getAsJsonObject("skill_related_task");
 		JsonObject mining = skill.getAsJsonObject("mining");
 		JsonObject farming = skill.getAsJsonObject("farming");
-		JsonObject fishing = skill.getAsJsonObject("fishing");
 		Set<String> completed = completedTasks(member);
 		Lines lines = new Lines();
 

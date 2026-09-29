@@ -33,7 +33,6 @@ import io.github.moulberry.notenoughupdates.util.Utils;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.Comparator;

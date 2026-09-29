@@ -95,7 +95,6 @@ public class BingoPage implements GuiProfileViewerPage {
 		int xAdjustment = 0;
 		int yAdjustment = 0;
 		for (JsonObject bingoGoal : bingoGoals) {
-			boolean dye = false;
 			boolean completed;
 			boolean communityGoal;
 			Item material;
@@ -110,7 +109,6 @@ public class BingoPage implements GuiProfileViewerPage {
 				if (completedGoals.contains(bingoGoal.get("id").getAsString())) {
 					material = VanillaItems.LIME_DYE;
 					xAdjustment = -1;
-					dye = true;
 					completed = true;
 				} else {
 					material = Items.PAPER;

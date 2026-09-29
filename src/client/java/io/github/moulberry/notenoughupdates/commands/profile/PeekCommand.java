@@ -135,7 +135,6 @@ public class PeekCommand {
 		float bankBalance = Utils.getElementAsFloat(Utils.getElement(profileInfo, "banking.balance"), -1);
 		float purseBalance = Utils.getElementAsFloat(Utils.getElement(profileInfo, "coin_purse"), 0);
 		long networth = profile.getNetWorth(null);
-		float money = Math.max(bankBalance + purseBalance, networth);
 
 		source.sendFeedback(
 			Component.literal(
