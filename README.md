@@ -4,6 +4,12 @@ Better PV is a Hypixel SkyBlock **profile viewer** mod for Fabric on Minecraft 2
 
 <p align="center"><img src="docs/screenshot.png" alt="Better PV showing a player's skills, SkyBlock level and 3D model" width="720"></p>
 
+## Showcase
+
+<p align="center"><a href="https://youtu.be/QZoFDBeMH5Y"><img src="https://img.youtube.com/vi/QZoFDBeMH5Y/maxresdefault.jpg" alt="Better PV showcase video on YouTube" width="720"></a></p>
+
+<p align="center"><a href="https://youtu.be/QZoFDBeMH5Y">Watch the showcase on YouTube</a></p>
+
 ## Features
 
 - Skills, slayers, SkyBlock level and net worth on one page, with a 3D model of the player
